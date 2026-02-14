@@ -163,7 +163,7 @@ export async function POST(request: NextRequest) {
             {
               role: "system",
               content:
-                "You are a clinical biomechanics expert. You analyze walking patterns with attention to detail — arm swing, stride length, foot clearance, and posture. You perform systematic observation before classifying. Respond with ONLY a valid JSON object.",
+                "You are a biomechanics measurement system. You take objective measurements from video frames — angles, distances, timing ratios. You measure first, then classify based on thresholds. Most people walk normally. Do not assume pathology. Respond with ONLY a valid JSON object.",
             },
             {
               role: "user",

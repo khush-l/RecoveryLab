@@ -88,8 +88,10 @@ body::-webkit-scrollbar {
   width: 0 !important;
 }
 
-* {
-  border-color: hsl(var(--border));
+@layer base {
+  * {
+    border-color: hsl(var(--border));
+  }
 }
 
 body {

@@ -1,13 +1,37 @@
-// NVIDIA VLM response — structured output from visual gait analysis
+// VLM response — structured output from visual gait analysis (measurement-based)
+export interface VLMMeasurements {
+  left_arm_swing_range: string;
+  right_arm_swing_range: string;
+  arm_asymmetry_percent: number;
+  left_stride_length: string;
+  right_stride_length: string;
+  stride_asymmetry_percent: number;
+  left_foot_clearance: string;
+  right_foot_clearance: string;
+  weight_bearing_ratio: string;
+  trunk_alignment: string;
+}
+
+export interface VLMEvidence {
+  frames_showing_pattern: string;
+  key_observations: string[];
+}
+
+export interface VLMQualityCheck {
+  video_quality: string;
+  full_body_visible: boolean;
+  consistent_view_angle: boolean;
+}
+
 export interface NvidiaVLMAnalysis {
-  gait_type: string; // normal, antalgic, trendelenburg, steppage, waddling, parkinsonian, hemiplegic, scissors
-  severity_score: number; // 0-10
-  visual_observations: string[];
-  left_side_observations: string[];
-  right_side_observations: string[];
-  asymmetries: string[];
-  postural_issues: string[];
+  gait_type: string;
+  severity_score: number;
   confidence: "high" | "medium" | "low";
+  measurements: VLMMeasurements;
+  evidence: VLMEvidence;
+  why_not_normal: string[];
+  affected_side: string;
+  quality_check: VLMQualityCheck;
 }
 
 // Single exercise from OpenAI coaching response

@@ -159,32 +159,38 @@ export default function AnalysisResults({
 
         <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
           <ObservationCard
-            title="Visual Observations"
+            title="Key Observations"
             icon={<Eye className="h-4 w-4 text-[#1DA1F2]" />}
-            items={visual_analysis.visual_observations}
+            items={visual_analysis.evidence?.key_observations ?? []}
           />
           <ObservationCard
-            title="Left Side"
+            title="Measurements"
             icon={<User className="h-4 w-4 text-[#1DA1F2]" />}
-            items={visual_analysis.left_side_observations}
+            items={visual_analysis.measurements ? [
+              `Arm asymmetry: ${visual_analysis.measurements.arm_asymmetry_percent}%`,
+              `Stride asymmetry: ${visual_analysis.measurements.stride_asymmetry_percent}%`,
+              `Weight bearing: ${visual_analysis.measurements.weight_bearing_ratio}`,
+              `Trunk: ${visual_analysis.measurements.trunk_alignment}`,
+              `L foot clearance: ${visual_analysis.measurements.left_foot_clearance}`,
+              `R foot clearance: ${visual_analysis.measurements.right_foot_clearance}`,
+            ] : []}
           />
           <ObservationCard
-            title="Right Side"
-            icon={<User className="h-4 w-4 text-[#1DA1F2]" />}
-            items={visual_analysis.right_side_observations}
+            title="Affected Side"
+            icon={<ArrowLeftRight className="h-4 w-4 text-[#1DA1F2]" />}
+            items={[
+              `Affected: ${visual_analysis.affected_side ?? "none"}`,
+              ...(visual_analysis.evidence?.frames_showing_pattern ? [`Pattern: ${visual_analysis.evidence.frames_showing_pattern}`] : []),
+            ]}
           />
-          <ObservationCard
-            title="Asymmetries"
-            icon={<ArrowLeftRight className="h-4 w-4 text-amber-500" />}
-            items={visual_analysis.asymmetries}
-            variant="warning"
-          />
-          <ObservationCard
-            title="Postural Issues"
-            icon={<Move className="h-4 w-4 text-amber-500" />}
-            items={visual_analysis.postural_issues}
-            variant="warning"
-          />
+          {visual_analysis.why_not_normal && visual_analysis.why_not_normal.length > 0 && (
+            <ObservationCard
+              title="Deviations from Normal"
+              icon={<Move className="h-4 w-4 text-amber-500" />}
+              items={visual_analysis.why_not_normal}
+              variant="warning"
+            />
+          )}
         </div>
       </section>
 
