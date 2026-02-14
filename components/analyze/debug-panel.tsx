@@ -78,7 +78,7 @@ export default function DebugPanel({
             <CollapsibleSection title="Grid Image Sent to VLM" defaultOpen>
               <div className="space-y-2">
                 <p className="text-xs text-[rgba(32,32,32,0.6)]">
-                  This is the composite 4x4 grid image that was sent to the VLM
+                  Debug preview of extracted frames sent to the VLM
                   for analysis. Size:{" "}
                   {Math.round(gridPreview.length / 1024)} KB
                 </p>
