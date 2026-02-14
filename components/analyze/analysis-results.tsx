@@ -1,22 +1,24 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
+import { createPortal } from "react-dom";
 import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
 import SeverityBadge from "@/components/analyze/severity-badge";
 import ExerciseCard from "@/components/analyze/exercise-card";
 import type { GaitAnalysisResponse } from "@/types/gait-analysis";
+import BodyObservationMap from "@/components/analyze/body-observation-map";
 import {
   AlertTriangle,
   Clock,
-  Eye,
   ArrowLeft,
-  Lightbulb,
-  User,
-  ArrowLeftRight,
   Move,
   Video,
   Loader2,
+  MessageSquare,
+  Phone,
+  CheckCircle2,
+  X,
 } from "lucide-react";
 
 interface AnalysisResultsProps {
@@ -84,7 +86,7 @@ function ObservationCard({
             <span
               className={cn(
                 "mt-1.5 inline-block h-1.5 w-1.5 shrink-0 rounded-full",
-                variant === "warning" ? "bg-amber-500" : "bg-[#1DA1F2]"
+                variant === "warning" ? "bg-amber-500" : "bg-[#1DB3FB]"
               )}
             />
             {item}
@@ -101,20 +103,31 @@ export default function AnalysisResults({
 }: AnalysisResultsProps) {
   const { visual_analysis, coaching } = data;
   const [isCreatingConsultation, setIsCreatingConsultation] = useState(false);
-  const [consultationUrl, setConsultationUrl] = useState<string | null>(null);
   const [consultationError, setConsultationError] = useState<string | null>(null);
+
+  // Poke SMS state
+  const [phoneNumber, setPhoneNumber] = useState("");
+  const [isSendingCheckin, setIsSendingCheckin] = useState(false);
+  const [pokeSuccess, setPokeSuccess] = useState(false);
+  const [pokeError, setPokeError] = useState<string | null>(null);
+
+  // Modal state
+  const [showConsultationModal, setShowConsultationModal] = useState(false);
+  const [showSmsModal, setShowSmsModal] = useState(false);
+  const [mounted, setMounted] = useState(false);
+  useEffect(() => setMounted(true), []);
 
   const handleScheduleConsultation = async () => {
     setIsCreatingConsultation(true);
     setConsultationError(null);
 
     try {
-      // Create avatar session with the analysis results
       const res = await fetch("/api/avatar/interactive-session", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
-          gait_analysis: data,
+          visual_analysis: data.visual_analysis,
+          coaching: data.coaching,
         }),
       });
 
@@ -124,10 +137,9 @@ export default function AnalysisResults({
         throw new Error(result.error || "Failed to create consultation session");
       }
 
-      // Open LiveKit room with the avatar
       const url = `https://meet.livekit.io/custom?liveKitUrl=${encodeURIComponent(result.livekit_url)}&token=${encodeURIComponent(result.livekit_client_token)}`;
-      setConsultationUrl(url);
       window.open(url, "_blank");
+      setShowConsultationModal(false);
     } catch (err) {
       const message = err instanceof Error ? err.message : "An error occurred";
       setConsultationError(message);
@@ -136,8 +148,40 @@ export default function AnalysisResults({
     }
   };
 
+  const handleEnableReminders = async () => {
+    if (!phoneNumber.trim()) return;
+
+    setIsSendingCheckin(true);
+    setPokeError(null);
+    setPokeSuccess(false);
+
+    try {
+      const res = await fetch("/api/poke/send_daily_checkin", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          patient_id: data.session_id,
+          phone_or_user_id: phoneNumber.trim(),
+        }),
+      });
+
+      const result = await res.json();
+
+      if (!result.success) {
+        throw new Error(result.error || "Failed to enable reminders");
+      }
+
+      setPokeSuccess(true);
+    } catch (err) {
+      const message = err instanceof Error ? err.message : "An error occurred";
+      setPokeError(message);
+    } finally {
+      setIsSendingCheckin(false);
+    }
+  };
+
   return (
-    <div className="mx-auto w-full max-w-[1000px] space-y-10">
+    <div className="mx-auto w-full max-w-[1200px] space-y-10">
       {/* ──────────────────────────────────────────────────────────────────
           A) Header Area
       ────────────────────────────────────────────────────────────────── */}
@@ -150,16 +194,185 @@ export default function AnalysisResults({
             Session {data.session_id} &middot; {formatTimestamp(data.timestamp)}
           </p>
         </div>
-        <Button
-          variant="modern-outline"
-          size="modern-lg"
-          onClick={onNewAnalysis}
-          className="gap-2 self-start"
-        >
-          <ArrowLeft className="h-4 w-4" />
-          New Analysis
-        </Button>
+        <div className="flex flex-wrap items-center gap-2 self-start">
+          <Button
+            variant="modern-primary"
+            size="modern-lg"
+            onClick={() => { setConsultationError(null); setShowConsultationModal(true); }}
+            className="gap-2"
+          >
+            <Video className="h-4 w-4" />
+            Schedule Consultation
+          </Button>
+          <Button
+            variant="modern-outline"
+            size="modern-lg"
+            onClick={() => setShowSmsModal(true)}
+            className="gap-2"
+          >
+            <MessageSquare className="h-4 w-4" />
+            SMS Reminders
+          </Button>
+        </div>
       </div>
+
+      {/* ── Consultation Modal ── */}
+      {mounted && showConsultationModal && createPortal(
+        <div className="fixed inset-0 z-[9999] flex items-center justify-center">
+          <div className="absolute inset-0 bg-black/40 backdrop-blur-sm" onClick={() => setShowConsultationModal(false)} />
+          <div className="relative z-10 mx-4 w-full max-w-md rounded-2xl border border-[rgba(32,32,32,0.08)] bg-white p-6 shadow-xl">
+            <button
+              onClick={() => setShowConsultationModal(false)}
+              className="absolute right-4 top-4 rounded-full p-1 text-[rgba(32,32,32,0.4)] hover:bg-gray-100 hover:text-[#202020]"
+            >
+              <X className="h-5 w-5" />
+            </button>
+
+            <div className="mb-4 flex items-center gap-3">
+              <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-gradient-to-b from-[#E0F5FF] to-white">
+                <Video className="h-5 w-5 text-[#1DB3FB]" />
+              </div>
+              <h3 className="text-lg font-bold text-[#202020]">Schedule Consultation</h3>
+            </div>
+
+            <p className="mb-6 text-sm leading-[170%] text-[rgba(32,32,32,0.65)]">
+              Start a virtual consultation to discuss your analysis results with our AI recovery specialist. The session will open in a new window.
+            </p>
+
+            {consultationError && (
+              <div className="mb-4 rounded-lg border border-red-200 bg-red-50 p-3 text-sm text-red-700">
+                <strong>Error:</strong> {consultationError}
+              </div>
+            )}
+
+            <div className="flex gap-3">
+              <Button
+                variant="modern-outline"
+                size="modern-lg"
+                onClick={() => setShowConsultationModal(false)}
+                className="flex-1"
+              >
+                Cancel
+              </Button>
+              <Button
+                variant="modern-primary"
+                size="modern-lg"
+                onClick={handleScheduleConsultation}
+                disabled={isCreatingConsultation}
+                className="flex-1 gap-2"
+              >
+                {isCreatingConsultation ? (
+                  <>
+                    <Loader2 className="h-4 w-4 animate-spin" />
+                    Starting...
+                  </>
+                ) : (
+                  <>
+                    <Video className="h-4 w-4" />
+                    Start Session
+                  </>
+                )}
+              </Button>
+            </div>
+          </div>
+        </div>,
+        document.body
+      )}
+
+      {/* ── SMS Reminders Modal ── */}
+      {mounted && showSmsModal && createPortal(
+        <div className="fixed inset-0 z-[9999] flex items-center justify-center">
+          <div className="absolute inset-0 bg-black/40 backdrop-blur-sm" onClick={() => setShowSmsModal(false)} />
+          <div className="relative z-10 mx-4 w-full max-w-md rounded-2xl border border-[rgba(32,32,32,0.08)] bg-white p-6 shadow-xl">
+            <button
+              onClick={() => setShowSmsModal(false)}
+              className="absolute right-4 top-4 rounded-full p-1 text-[rgba(32,32,32,0.4)] hover:bg-gray-100 hover:text-[#202020]"
+            >
+              <X className="h-5 w-5" />
+            </button>
+
+            <div className="mb-4 flex items-center gap-3">
+              <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-gradient-to-b from-[#E0FFE8] to-white">
+                <MessageSquare className="h-5 w-5 text-green-500" />
+              </div>
+              <h3 className="text-lg font-bold text-[#202020]">SMS Reminders</h3>
+            </div>
+
+            <p className="mb-6 text-sm leading-[170%] text-[rgba(32,32,32,0.65)]">
+              Get daily check-in reminders via text to track your pain levels, exercise completion, and recovery progress.
+            </p>
+
+            {pokeSuccess ? (
+              <div className="flex items-center gap-3 rounded-lg border border-green-200 bg-green-50 p-4">
+                <CheckCircle2 className="h-5 w-5 shrink-0 text-green-600" />
+                <div>
+                  <p className="text-sm font-semibold text-green-800">Reminders enabled!</p>
+                  <p className="text-sm text-green-700">
+                    You&apos;ll receive check-in SMS at{" "}
+                    <span className="font-medium">{phoneNumber}</span>.
+                  </p>
+                </div>
+              </div>
+            ) : (
+              <>
+                <div className="mb-4">
+                  <label htmlFor="phone-number" className="mb-1.5 block text-sm font-semibold text-[#202020]">
+                    Phone Number
+                  </label>
+                  <div className="relative">
+                    <Phone className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-[rgba(32,32,32,0.35)]" />
+                    <input
+                      id="phone-number"
+                      type="tel"
+                      value={phoneNumber}
+                      onChange={(e) => setPhoneNumber(e.target.value)}
+                      placeholder="+1 (512) 363-8422"
+                      className="w-full rounded-lg border border-[rgba(32,32,32,0.15)] py-2.5 pl-10 pr-4 text-sm text-[#202020] placeholder:text-[rgba(32,32,32,0.35)] focus:border-green-400 focus:outline-none focus:ring-2 focus:ring-green-100"
+                    />
+                  </div>
+                </div>
+
+                {pokeError && (
+                  <div className="mb-4 rounded-lg border border-red-200 bg-red-50 p-3 text-sm text-red-700">
+                    <strong>Error:</strong> {pokeError}
+                  </div>
+                )}
+
+                <div className="flex gap-3">
+                  <Button
+                    variant="modern-outline"
+                    size="modern-lg"
+                    onClick={() => setShowSmsModal(false)}
+                    className="flex-1"
+                  >
+                    Cancel
+                  </Button>
+                  <Button
+                    variant="modern-primary"
+                    size="modern-lg"
+                    onClick={handleEnableReminders}
+                    disabled={isSendingCheckin || !phoneNumber.trim()}
+                    className="flex-1 gap-2 bg-green-600 hover:bg-green-700 border-green-700 shadow-none [background-image:none]"
+                  >
+                    {isSendingCheckin ? (
+                      <>
+                        <Loader2 className="h-4 w-4 animate-spin" />
+                        Sending...
+                      </>
+                    ) : (
+                      <>
+                        <MessageSquare className="h-4 w-4" />
+                        Enable Reminders
+                      </>
+                    )}
+                  </Button>
+                </div>
+              </>
+            )}
+          </div>
+        </div>,
+        document.body
+      )}
 
       {/* ──────────────────────────────────────────────────────────────────
           B) Overview Row
@@ -188,209 +401,115 @@ export default function AnalysisResults({
       </div>
 
       {/* ──────────────────────────────────────────────────────────────────
-          C) Visual Analysis Section
+          C) Two-column layout: Analysis + Exercises
       ────────────────────────────────────────────────────────────────── */}
-      <section>
-        <h3 className="mb-6 text-xl font-bold tracking-[-0.03em] sm:text-2xl">
-          <span className="text-gradient">Visual Analysis</span>
-        </h3>
+      <div className="grid grid-cols-1 gap-8 lg:grid-cols-[3fr_2fr]">
+        {/* LEFT COLUMN — Visual Analysis + Coaching Summary */}
+        <div className="space-y-6">
+          <h3 className="h2-style text-[#202020]">
+            <span className="text-gradient">Visual Analysis</span>
+          </h3>
 
-        <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
-          <ObservationCard
-            title="Visual Observations"
-            icon={<Eye className="h-4 w-4 text-[#1DA1F2]" />}
-            items={visual_analysis.visual_observations}
-          />
-          <ObservationCard
-            title="Left Side"
-            icon={<User className="h-4 w-4 text-[#1DA1F2]" />}
-            items={visual_analysis.left_side_observations}
-          />
-          <ObservationCard
-            title="Right Side"
-            icon={<User className="h-4 w-4 text-[#1DA1F2]" />}
-            items={visual_analysis.right_side_observations}
-          />
-          <ObservationCard
-            title="Asymmetries"
-            icon={<ArrowLeftRight className="h-4 w-4 text-amber-500" />}
-            items={visual_analysis.asymmetries}
-            variant="warning"
-          />
-          <ObservationCard
-            title="Postural Issues"
-            icon={<Move className="h-4 w-4 text-amber-500" />}
-            items={visual_analysis.postural_issues}
-            variant="warning"
-          />
-        </div>
-      </section>
-
-      {/* ──────────────────────────────────────────────────────────────────
-          D) Coaching Section
-      ────────────────────────────────────────────────────────────────── */}
-      <section className="space-y-8">
-        <h3 className="text-xl font-bold tracking-[-0.03em] sm:text-2xl">
-          <span className="text-gradient">Your Exercise Plan</span>
-        </h3>
-
-        {/* Explanation */}
-        <div className="platform-feature-card rounded-[10px] border border-[rgba(32,32,32,0.06)] p-5 sm:p-6">
-          <p className="text-base leading-[170%] text-[rgba(32,32,32,0.75)]">
+          {/* Explanation */}
+          <p className="text-base leading-[170%] text-[rgba(32,32,32,0.75)] sm:text-lg">
             {coaching.explanation}
           </p>
+
+          <BodyObservationMap visual_analysis={visual_analysis} />
+
+          {/* Likely Causes + Postural Issues side by side */}
+          <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
+            {coaching.likely_causes.length > 0 && (
+              <ObservationCard
+                title="Likely Causes"
+                icon={<Move className="h-4 w-4 text-amber-500" />}
+                items={coaching.likely_causes}
+                variant="warning"
+              />
+            )}
+            {visual_analysis.postural_issues.length > 0 && (
+              <ObservationCard
+                title="Postural Issues"
+                icon={<Move className="h-4 w-4 text-amber-500" />}
+                items={visual_analysis.postural_issues}
+                variant="warning"
+              />
+            )}
+          </div>
         </div>
 
-        {/* Likely causes */}
-        {coaching.likely_causes.length > 0 && (
-          <div>
-            <h4 className="mb-3 text-sm font-bold uppercase tracking-wider text-[rgba(32,32,32,0.45)]">
-              Likely Causes
-            </h4>
-            <ul className="space-y-2">
-              {coaching.likely_causes.map((cause, i) => (
-                <li
-                  key={i}
-                  className="flex items-start gap-2.5 text-sm leading-[160%] text-[rgba(32,32,32,0.75)]"
-                >
-                  <span className="mt-1.5 inline-block h-1.5 w-1.5 shrink-0 rounded-full bg-[rgba(32,32,32,0.25)]" />
-                  {cause}
-                </li>
+        {/* RIGHT COLUMN — Exercises + Timeline + Warnings */}
+        <div className="space-y-6">
+          <h3 className="h2-style text-[#202020]">
+            <span className="text-gradient">Your Exercise Plan</span>
+          </h3>
+
+          {/* Exercise cards */}
+          {coaching.exercises.length > 0 && (
+            <div className="space-y-4">
+              {coaching.exercises.map((exercise, i) => (
+                <ExerciseCard key={i} exercise={exercise} index={i} />
               ))}
-            </ul>
-          </div>
-        )}
-
-        {/* Immediate tip - blue callout */}
-        {coaching.immediate_tip && (
-          <div className="rounded-[10px] bg-gradient-to-b from-[#E0F5FF] to-white border border-[rgba(29,161,242,0.15)] p-5 sm:p-6">
-            <div className="flex items-start gap-3">
-              <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-white shadow-[0px_2px_4px_-1px_rgba(1,65,99,0.08)]">
-                <Lightbulb className="h-4 w-4 text-[#1DA1F2]" />
-              </div>
-              <div>
-                <p className="mb-1 text-xs font-semibold uppercase tracking-wider text-[#1DA1F2]">
-                  Immediate Tip
-                </p>
-                <p className="text-sm leading-[170%] text-[rgba(32,32,32,0.75)]">
-                  {coaching.immediate_tip}
-                </p>
-              </div>
-            </div>
-          </div>
-        )}
-
-        {/* Exercise cards */}
-        {coaching.exercises.length > 0 && (
-          <div className="space-y-4">
-            <h4 className="text-sm font-bold uppercase tracking-wider text-[rgba(32,32,32,0.45)]">
-              Exercises ({coaching.exercises.length})
-            </h4>
-            {coaching.exercises.map((exercise, i) => (
-              <ExerciseCard key={i} exercise={exercise} index={i} />
-            ))}
-          </div>
-        )}
-
-        {/* Timeline */}
-        {coaching.timeline && (
-          <div className="platform-feature-card rounded-[10px] border border-[rgba(32,32,32,0.06)] p-5 sm:p-6">
-            <div className="flex items-start gap-3">
-              <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-gradient-to-b from-[#E0F5FF] to-white">
-                <Clock className="h-4 w-4 text-[#1DA1F2]" />
-              </div>
-              <div>
-                <p className="mb-1 text-xs font-semibold uppercase tracking-wider text-[rgba(32,32,32,0.45)]">
-                  Expected Timeline
-                </p>
-                <p className="text-sm leading-[170%] text-[rgba(32,32,32,0.75)]">
-                  {coaching.timeline}
-                </p>
-              </div>
-            </div>
-          </div>
-        )}
-
-        {/* Warning signs - red callout */}
-        {coaching.warning_signs.length > 0 && (
-          <div className="rounded-[10px] bg-gradient-to-b from-red-50 to-white border border-red-100 p-5 sm:p-6">
-            <div className="flex items-start gap-3">
-              <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-white shadow-[0px_2px_4px_-1px_rgba(1,65,99,0.08)]">
-                <AlertTriangle className="h-4 w-4 text-red-500" />
-              </div>
-              <div className="flex-1">
-                <p className="mb-2 text-xs font-semibold uppercase tracking-wider text-red-600">
-                  Warning Signs
-                </p>
-                <ul className="space-y-1.5">
-                  {coaching.warning_signs.map((sign, i) => (
-                    <li
-                      key={i}
-                      className="flex items-start gap-2 text-sm leading-[160%] text-[rgba(32,32,32,0.75)]"
-                    >
-                      <span className="mt-1.5 inline-block h-1.5 w-1.5 shrink-0 rounded-full bg-red-400" />
-                      {sign}
-                    </li>
-                  ))}
-                </ul>
-              </div>
-            </div>
-          </div>
-        )}
-
-        {/* Schedule Consultation */}
-        <div className="platform-feature-card rounded-[10px] border border-[rgba(32,32,32,0.06)] p-6 sm:p-8 bg-gradient-to-b from-blue-50/50 to-white">
-          <div className="flex flex-col items-center gap-4 text-center sm:flex-row sm:text-left">
-            <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-full bg-gradient-to-b from-[#E0F5FF] to-white shadow-[0px_2px_4px_-1px_rgba(1,65,99,0.08)]">
-              <Video className="h-6 w-6 text-[#1DA1F2]" />
-            </div>
-            <div className="flex-1">
-              <h4 className="mb-1 text-lg font-bold tracking-[-0.01rem] text-[#202020]">
-                Have Questions or Concerns?
-              </h4>
-              <p className="text-sm leading-[160%] text-[rgba(32,32,32,0.65)]">
-                Schedule a virtual consultation to discuss your analysis results with our AI recovery specialist
-              </p>
-            </div>
-            <Button
-              variant="modern-primary"
-              size="modern-xl"
-              onClick={handleScheduleConsultation}
-              disabled={isCreatingConsultation}
-              className="gap-2 px-6 shrink-0"
-            >
-              {isCreatingConsultation ? (
-                <>
-                  <Loader2 className="h-5 w-5 animate-spin" />
-                  Starting...
-                </>
-              ) : (
-                <>
-                  <Video className="h-5 w-5" />
-                  Schedule Consultation
-                </>
-              )}
-            </Button>
-          </div>
-          {consultationError && (
-            <div className="mt-4 rounded-lg bg-red-50 border border-red-200 p-3 text-sm text-red-700">
-              <strong>Error:</strong> {consultationError}
             </div>
           )}
-          {consultationUrl && (
-            <div className="mt-4 rounded-lg bg-green-50 border border-green-200 p-3 text-sm text-green-700">
-              ✓ Consultation session opened in a new window. If it didn't open,{" "}
-              <a href={consultationUrl} target="_blank" rel="noopener noreferrer" className="underline font-semibold">
-                click here
-              </a>
+
+          {/* Timeline + Warning signs side by side */}
+          {(coaching.timeline || coaching.warning_signs.length > 0) && (
+            <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
+              {coaching.timeline && (
+                <div className="platform-feature-card rounded-[10px] border border-[rgba(32,32,32,0.06)] p-5">
+                  <div className="mb-3 flex items-center gap-2">
+                    <Clock className="h-4 w-4 text-[#1DB3FB]" />
+                    <p className="text-sm font-semibold text-[#202020]">
+                      Expected Timeline
+                    </p>
+                  </div>
+                  <p className="text-sm leading-[170%] text-[rgba(32,32,32,0.75)]">
+                    {coaching.timeline}
+                  </p>
+                </div>
+              )}
+
+              {coaching.warning_signs.length > 0 && (
+                <div className="rounded-[10px] border border-red-100 bg-red-50/50 p-5">
+                  <div className="mb-3 flex items-center gap-2">
+                    <AlertTriangle className="h-4 w-4 text-red-500" />
+                    <p className="text-sm font-semibold text-red-600">
+                      Warning Signs
+                    </p>
+                  </div>
+                  <ul className="space-y-1.5">
+                    {coaching.warning_signs.map((sign, i) => (
+                      <li
+                        key={i}
+                        className="flex items-start gap-2 text-sm leading-[160%] text-[rgba(32,32,32,0.75)]"
+                      >
+                        <span className="mt-1.5 inline-block h-1.5 w-1.5 shrink-0 rounded-full bg-red-400" />
+                        {sign}
+                      </li>
+                    ))}
+                  </ul>
+                </div>
+              )}
             </div>
           )}
         </div>
-      </section>
+      </div>
 
       {/* ──────────────────────────────────────────────────────────────────
-          E) Disclaimer Footer
+          New Analysis + Disclaimer Footer
       ────────────────────────────────────────────────────────────────── */}
+      <div className="flex justify-center">
+        <Button
+          variant="modern-outline"
+          size="modern-lg"
+          onClick={onNewAnalysis}
+          className="gap-2"
+        >
+          <ArrowLeft className="h-4 w-4" />
+          New Analysis
+        </Button>
+      </div>
       <div className="border-t border-[rgba(32,32,32,0.06)] pt-6 pb-4 text-center">
         <p className="text-xs leading-[170%] text-[rgba(32,32,32,0.4)]">
           This analysis is for informational purposes only. Please consult a

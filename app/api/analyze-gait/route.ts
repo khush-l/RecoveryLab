@@ -16,6 +16,8 @@ import {
   buildVLMPrompt,
 } from "@/lib/prompt-templates";
 
+import { getExercisesForGait } from "@/lib/gait-exercises";
+
 // ---------------------------------------------------------------------------
 // JSON extraction — models often wrap JSON in markdown or prose text
 // ---------------------------------------------------------------------------
@@ -77,10 +79,18 @@ function envNumber(key: string, fallback: number): number {
   return raw ? Number(raw) : fallback;
 }
 
-/** Strip `data:image/...;base64,` prefix to get raw base64 for Ollama */
+/** Strip `data:image/...;base64,` prefix to get raw base64 */
 function stripDataUrl(dataUrl: string): string {
   const idx = dataUrl.indexOf(",");
   return idx >= 0 ? dataUrl.slice(idx + 1) : dataUrl;
+}
+
+/** Extract the media type from a data URL (e.g. "image/jpeg") */
+function getMediaType(dataUrl: string): "image/jpeg" | "image/png" | "image/gif" | "image/webp" {
+  const match = dataUrl.match(/^data:(image\/\w+);/);
+  const type = match?.[1];
+  if (type === "image/png" || type === "image/gif" || type === "image/webp") return type;
+  return "image/jpeg";
 }
 
 // ---------------------------------------------------------------------------
@@ -127,85 +137,74 @@ export async function POST(request: NextRequest) {
     console.log(`Total frame data: ~${debug.grid_size_kb} KB`);
 
     // ------------------------------------------------------------------
-    // 2. Call Ollama (Qwen 2.5 VL) for visual gait analysis
+    // 2. Call Claude Opus 4.6 for visual gait analysis
     // ------------------------------------------------------------------
 
     let vlmAnalysis: NvidiaVLMAnalysis;
 
     try {
-      const ollamaEndpoint = env("OLLAMA_ENDPOINT", "http://localhost:11434/api/chat");
-      const ollamaModel = env("OLLAMA_MODEL", "qwen2.5vl");
-      const ollamaTimeout = envNumber("OLLAMA_TIMEOUT", 120000);
+      const anthropicApiKey = env("ANTHROPIC_API_KEY");
+      const vlmModel = env("VLM_MODEL", "claude-opus-4-6");
+      const vlmTimeout = envNumber("VLM_TIMEOUT", 120000);
 
-      debug.vlm_endpoint = ollamaEndpoint;
-      debug.vlm_model = ollamaModel;
+      debug.vlm_model = vlmModel;
 
       const vlmPrompt = buildVLMPrompt(videoDuration, frames.length, timestamps);
       debug.vlm_prompt = vlmPrompt;
 
-      // Ollama takes base64 images (no data URL prefix) in an `images` array
-      const base64Frames = frames.map(stripDataUrl);
-
       console.log("\n---------- VLM REQUEST ----------");
-      console.log(`Endpoint: ${ollamaEndpoint}`);
-      console.log(`Model: ${ollamaModel}`);
+      console.log(`Model: ${vlmModel}`);
       console.log(`Sending ${frames.length} individual frames`);
       console.log(`Prompt:\n${vlmPrompt}`);
 
       const vlmStart = Date.now();
 
-      const vlmResponse = await fetch(ollamaEndpoint, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          model: ollamaModel,
-          messages: [
-            {
-              role: "system",
-              content:
-                "You are a clinical biomechanics expert. You analyze walking patterns with attention to detail — arm swing, stride length, foot clearance, and posture. You perform systematic observation before classifying. Respond with ONLY a valid JSON object.",
-            },
-            {
-              role: "user",
-              content: vlmPrompt,
-              images: base64Frames,
-            },
-          ],
-          stream: false,
-          format: "json",
-        }),
-        signal: AbortSignal.timeout(ollamaTimeout),
+      const vlmClient = new Anthropic({
+        apiKey: anthropicApiKey,
+        timeout: vlmTimeout,
       });
 
-      debug.vlm_status = vlmResponse.status;
-      debug.vlm_duration_ms = Date.now() - vlmStart;
+      // Build content blocks: images first, then text prompt
+      const contentBlocks: Anthropic.MessageCreateParams["messages"][0]["content"] = [];
 
-      console.log(`\nVLM Response status: ${vlmResponse.status}`);
-      console.log(`VLM Response time: ${debug.vlm_duration_ms}ms`);
-
-      if (!vlmResponse.ok) {
-        const errorText = await vlmResponse
-          .text()
-          .catch(() => "Unknown error");
-        debug.vlm_raw_response = errorText;
-        console.log(`VLM Error response:\n${errorText}`);
-        throw new Error(
-          `Ollama returned status ${vlmResponse.status}: ${errorText}`
-        );
+      for (let i = 0; i < frames.length; i++) {
+        contentBlocks.push({
+          type: "image",
+          source: {
+            type: "base64",
+            media_type: getMediaType(frames[i]),
+            data: stripDataUrl(frames[i]),
+          },
+        });
       }
 
-      const vlmData = await vlmResponse.json();
+      contentBlocks.push({
+        type: "text",
+        text: vlmPrompt,
+      });
 
-      // Ollama chat API returns { message: { role, content } }
-      const rawContent: string = vlmData?.message?.content ?? "";
+      const vlmMessage = await vlmClient.messages.create({
+        model: vlmModel,
+        max_tokens: 4096,
+        system: "You are a clinical gait analysis expert. You identify gait abnormalities from video frames. Answer the checklist questions honestly based on what you see. Respond with ONLY a valid JSON object.",
+        messages: [{ role: "user", content: contentBlocks }],
+      });
+
+      debug.vlm_duration_ms = Date.now() - vlmStart;
+
+      const rawContent = vlmMessage.content
+        .filter((block) => block.type === "text")
+        .map((block) => block.text)
+        .join("");
 
       debug.vlm_raw_response = rawContent;
 
-      console.log(`\nVLM raw response:\n${rawContent}`);
+      console.log(`\nVLM Response time: ${debug.vlm_duration_ms}ms`);
+      console.log(`VLM raw response:\n${rawContent}`);
       console.log("---------- END VLM RESPONSE ----------\n");
 
       if (!rawContent) {
-        throw new Error("Ollama returned empty content");
+        throw new Error("Claude VLM returned empty content");
       }
 
       vlmAnalysis = extractJSON<NvidiaVLMAnalysis>(rawContent);
@@ -230,15 +229,15 @@ export async function POST(request: NextRequest) {
     }
 
     // ------------------------------------------------------------------
-    // 3. Call Claude API for exercise coaching
+    // 3. Generate coaching summary + use hardcoded exercises
     // ------------------------------------------------------------------
 
     let coaching: CoachingPlan;
 
     try {
       const anthropicApiKey = env("ANTHROPIC_API_KEY");
-      const claudeModel = env("CLAUDE_MODEL", "claude-sonnet-4-5-20250929");
-      const claudeTimeout = envNumber("CLAUDE_API_TIMEOUT", 60000);
+      const claudeModel = env("CLAUDE_MODEL", "claude-haiku-4-5-20251001");
+      const claudeTimeout = envNumber("CLAUDE_API_TIMEOUT", 30000);
 
       debug.coaching_model = claudeModel;
 
@@ -252,13 +251,12 @@ export async function POST(request: NextRequest) {
 
       console.log("\n---------- COACHING REQUEST ----------");
       console.log(`Model: ${claudeModel}`);
-      console.log(`User prompt:\n${userPrompt}`);
 
       const coachingStart = Date.now();
 
       const message = await anthropic.messages.create({
         model: claudeModel,
-        max_tokens: 4096,
+        max_tokens: 500,
         system: COACHING_SYSTEM_PROMPT,
         messages: [{ role: "user", content: userPrompt }],
       });
@@ -278,11 +276,22 @@ export async function POST(request: NextRequest) {
       console.log(`Coaching raw response:\n${coachingRaw}`);
       console.log("---------- END COACHING RESPONSE ----------\n");
 
-      if (!coachingRaw) {
-        throw new Error("Claude returned empty content");
-      }
+      const partial = coachingRaw
+        ? extractJSON<Omit<CoachingPlan, "exercises">>(coachingRaw)
+        : null;
 
-      coaching = extractJSON<CoachingPlan>(coachingRaw);
+      coaching = {
+        explanation: partial?.explanation ?? "Analysis complete. See exercises below.",
+        likely_causes: partial?.likely_causes ?? [],
+        exercises: getExercisesForGait(vlmAnalysis.gait_type),
+        timeline: partial?.timeline ?? "4-8 weeks with consistent practice.",
+        warning_signs: partial?.warning_signs ?? [
+          "Sudden pain or weakness",
+          "Loss of balance or falls",
+          "Numbness or tingling in legs",
+        ],
+        immediate_tip: partial?.immediate_tip ?? "Focus on smooth, controlled movements while walking.",
+      };
     } catch (coachingError) {
       const message =
         coachingError instanceof Error
@@ -290,27 +299,19 @@ export async function POST(request: NextRequest) {
           : String(coachingError);
       console.error(`\nCOACHING ERROR: ${message}`);
 
-      return NextResponse.json<GaitAnalysisResponse>(
-        {
-          success: true,
-          session_id: sessionId,
-          timestamp,
-          visual_analysis: vlmAnalysis,
-          coaching: {
-            explanation:
-              "Coaching generation failed. Please review the visual analysis below.",
-            likely_causes: [],
-            exercises: [],
-            timeline: "N/A",
-            warning_signs: [],
-            immediate_tip:
-              "Please consult a healthcare professional for personalized advice.",
-          },
-          error: `Coaching generation failed: ${message}`,
-          debug,
-        },
-        { status: 200 }
-      );
+      // Still return results with hardcoded exercises even if coaching text fails
+      coaching = {
+        explanation: "See your exercise plan below based on the detected gait pattern.",
+        likely_causes: [],
+        exercises: getExercisesForGait(vlmAnalysis.gait_type),
+        timeline: "4-8 weeks with consistent practice.",
+        warning_signs: [
+          "Sudden pain or weakness",
+          "Loss of balance or falls",
+          "Numbness or tingling in legs",
+        ],
+        immediate_tip: "Please consult a healthcare professional for personalized advice.",
+      };
     }
 
     // ------------------------------------------------------------------

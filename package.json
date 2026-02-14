@@ -10,6 +10,7 @@
   },
   "dependencies": {
     "@anthropic-ai/sdk": "^0.74.0",
+    "@darshanpatel2608/human-body-react": "^1.2.9",
     "@heygen/liveavatar-web-sdk": "^0.0.10",
     "class-variance-authority": "^0.7.1",
     "clsx": "^2.1.1",
@@ -19,6 +20,7 @@
     "react": "19.2.3",
     "react-dom": "19.2.3",
     "resend": "^6.9.2",
+    "styled-components": "^6.3.9",
     "tailwind-merge": "^3.4.0",
     "uuid": "^13.0.0"
   },

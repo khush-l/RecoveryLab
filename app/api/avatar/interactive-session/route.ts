@@ -9,7 +9,7 @@ import { createSessionToken, startSession, sendSpeakTask } from "@/lib/recoverai
  * 
  * Request body:
  * {
- *   "visual_analysis": { ... },  // from Ollama VLM
+ *   "visual_analysis": { ... },  // from Claude VLM
  *   "coaching": { ... },          // from Claude
  *   "avatar_id": "optional"
  * }
@@ -100,23 +100,26 @@ function buildInitialAvatarMessage(
   visual_analysis: any,
   coaching: any
 ): string {
-  const { gait_pattern, severity, observations } = visual_analysis;
+  const { gait_type, severity_score, visual_observations } = visual_analysis;
   const { explanation, exercises, immediate_tip } = coaching;
 
   let message = "";
 
   // Greeting and overview
-  if (gait_pattern && gait_pattern !== "Normal") {
-    message += `Hello! I've analyzed your gait and noticed some ${severity === "severe" ? "significant" : severity} patterns that we should address. `;
-    message += `Specifically, I observed ${gait_pattern.toLowerCase()} gait. `;
+  const severityLabel =
+    severity_score >= 7 ? "significant" : severity_score >= 4 ? "moderate" : "mild";
+
+  if (gait_type && gait_type.toLowerCase() !== "normal") {
+    message += `Hello! I've analyzed your gait and noticed some ${severityLabel} patterns that we should address. `;
+    message += `Specifically, I observed ${gait_type.replace(/_/g, " ")} gait. `;
   } else {
     message += `Hello! I've analyzed your gait and overall it looks quite good. `;
   }
 
   // Key observations (pick 2-3 most important)
-  if (observations && observations.length > 0) {
+  if (visual_observations && visual_observations.length > 0) {
     message += `Here's what I noticed: `;
-    const keyObs = observations.slice(0, 3);
+    const keyObs = visual_observations.slice(0, 3);
     message += keyObs.join(", ") + ". ";
   }
 
@@ -134,9 +137,11 @@ function buildInitialAvatarMessage(
   if (exercises && exercises.length > 0) {
     const firstExercise = exercises[0];
     message += `I've prepared a personalized exercise plan for you. Let's start with ${firstExercise.name}. `;
-    message += `${firstExercise.how_to_do_it} `;
-    if (firstExercise.reps) {
-      message += `I recommend ${firstExercise.reps}. `;
+    if (firstExercise.instructions && firstExercise.instructions.length > 0) {
+      message += firstExercise.instructions.join(" ") + " ";
+    }
+    if (firstExercise.sets_reps) {
+      message += `I recommend ${firstExercise.sets_reps}. `;
     }
   }
 

@@ -1,6 +1,6 @@
 // NVIDIA VLM response — structured output from visual gait analysis
 export interface NvidiaVLMAnalysis {
-  gait_type: string; // normal, antalgic, trendelenburg, steppage, waddling, parkinsonian, hemiplegic, scissors
+  gait_type: string; // normal, antalgic, trendelenburg, steppage, parkinsonian, hemiplegic, scissors
   severity_score: number; // 0-10
   visual_observations: string[];
   left_side_observations: string[];

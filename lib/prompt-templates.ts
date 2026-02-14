@@ -12,7 +12,6 @@ Classify the gait pattern into one of these categories:
 - antalgic (pain-avoidance gait)
 - trendelenburg (hip abductor weakness)
 - steppage (foot drop compensation)
-- waddling (bilateral hip weakness)
 - parkinsonian (shuffling, reduced arm swing)
 - hemiplegic (circumduction pattern)
 - scissors (spastic adductor pattern)
@@ -49,27 +48,20 @@ Your role:
 Guidelines:
 - Always err on the side of caution — recommend seeing a healthcare provider for anything that could indicate a serious condition.
 - Exercises should be appropriate for general population fitness levels.
-- Include form tips to prevent compensation patterns.
-- Provide a realistic timeline for improvement.
-- List warning signs that should prompt immediate medical attention.
+- Be CONCISE. Keep explanations to 1-2 sentences. Keep instructions brief.
+- Provide exactly 3 exercises, no more.
+- Keep likely_causes to 2-3 items max.
+- Keep warning_signs to 3 items max.
 
-You MUST respond with a JSON object matching this exact structure:
+Exercises are provided separately. You ONLY need to generate the text summary.
+
+Respond with a JSON object matching this exact structure:
 {
-  "explanation": "<plain-language summary of what the gait pattern means>",
-  "likely_causes": ["<biomechanical or muscular causes>"],
-  "exercises": [
-    {
-      "name": "<exercise name>",
-      "target": "<what muscle/movement it addresses>",
-      "instructions": ["<step-by-step instructions>"],
-      "sets_reps": "<e.g., 3 sets of 10 reps>",
-      "frequency": "<e.g., daily, 3x per week>",
-      "form_tips": ["<key form cues to prevent bad habits>"]
-    }
-  ],
-  "timeline": "<expected timeline for noticeable improvement>",
-  "warning_signs": ["<red flags that need medical attention>"],
-  "immediate_tip": "<one thing they can focus on right now while walking>"
+  "explanation": "<1-2 sentence plain-language summary of the gait pattern>",
+  "likely_causes": ["<2-3 biomechanical causes>"],
+  "timeline": "<1 sentence expected improvement timeline>",
+  "warning_signs": ["<3 red flags that need medical attention>"],
+  "immediate_tip": "<1 sentence actionable tip for right now>"
 }
 
 Return ONLY the JSON object, no additional text.`;
@@ -87,35 +79,32 @@ export function buildVLMPrompt(
     .map((t, i) => `Frame ${i + 1}: ${t.toFixed(2)}s`)
     .join(", ");
 
-  return `You are given ${frameCount} sequential frames from a ${duration.toFixed(1)}-second walking video. The frames are provided as separate images in chronological order.
+  return `These ${frameCount} frames are from a ${duration.toFixed(1)}s walking video (${(frameCount / duration).toFixed(1)} fps). This person has a gait abnormality — your job is to identify which one.
 
-Frame timestamps: ${timeList}
+Answer YES or NO for each question. Be strict — look at EVERY frame carefully.
 
-Perform a SYSTEMATIC observation across all ${frameCount} frames before classifying:
+1. Is one arm held BENT and FIXED against the body (not swinging) while the other arm swings? YES/NO
+2. Is one leg STIFF (knee doesn't bend) and swinging in an OUTWARD ARC? YES/NO
+3. Is the person LIMPING — spending less time on one foot than the other, or taking a shorter step on one side? YES/NO
+4. Are BOTH arms showing little or no swing? YES/NO
+5. Are BOTH legs taking SHORT SHUFFLING steps equally? YES/NO
+6. Is the person STOOPED/bent forward? YES/NO
+7. Does the pelvis DROP on one side when the other foot lifts? YES/NO
+8. Does one knee lift unusually HIGH (like marching)? YES/NO
+9. Do the feet land CLOSE TOGETHER or CROSS toward midline? YES/NO
+10. Are both legs STIFF? YES/NO
 
-1. Stride length: Compare left vs right step distances across frames. Are steps short and shuffling, or long and confident?
-2. Arm swing: Look at BOTH arms across all frames. Is arm swing present? Is it reduced or absent on one/both sides? Compare amplitude left vs right.
-3. Foot clearance: Do the feet lift clearly off the ground, or do they barely clear/drag?
-4. Cadence/rhythm: Based on timestamps, is the stepping rhythm regular or irregular? Are steps quick and small, or slow and deliberate?
-5. Stance phase: Which leg bears weight longer? Is there a limp or favoring?
-6. Trunk posture: Is the trunk upright, stooped forward, leaning to one side, or rigid?
-7. Turning/initiation: Any hesitation or freezing visible in early or late frames?
-8. Overall fluidity: Does movement look smooth and coordinated, or stiff and segmented?
-
-Classify the gait pattern based on your observations:
-- normal: symmetrical stride, smooth arm swing, upright posture, good foot clearance
-- antalgic: shortened stance on painful side, limping, favoring one leg
-- trendelenburg: hip drops on unsupported side, trunk lean to compensate
-- steppage: exaggerated knee lift, foot slapping, compensating for foot drop
-- waddling: wide base, trunk sways side to side, bilateral hip weakness
-- parkinsonian: short shuffling steps, reduced or absent arm swing, forward-stooped posture, reduced foot clearance
-- hemiplegic: one-sided weakness, leg circumduction, arm held flexed
-- scissors: legs cross midline, spastic narrow base
-
-Choose the classification that best matches your systematic observations. Base your decision only on what you see in the frames.
+Classification rules:
+- YES to 1+2 → hemiplegic
+- YES to 3 (but NOT 1 or 2) → antalgic
+- YES to 4+5+6 → parkinsonian
+- YES to 7 → trendelenburg
+- YES to 8 → steppage
+- YES to 9+10 → scissors
+- All NO → normal
 
 Return ONLY this JSON:
-{"gait_type":"<classification>","severity_score":<0-10>,"visual_observations":["<detailed findings from each observation area>"],"left_side_observations":["<left side specifics>"],"right_side_observations":["<right side specifics>"],"asymmetries":["<left-right differences with percentages if possible>"],"postural_issues":["<posture findings>"],"confidence":"<high|medium|low>"}`;
+{"gait_type":"<type>","severity_score":<1-10>,"visual_observations":["<what you saw>"],"left_side_observations":["<left arm and leg details>"],"right_side_observations":["<right arm and leg details>"],"asymmetries":["<left vs right differences>"],"postural_issues":["<trunk and posture findings>"],"confidence":"<high|medium|low>"}`;
 }
 
 /**

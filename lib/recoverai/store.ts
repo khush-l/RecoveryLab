@@ -24,7 +24,7 @@ export async function loadEvents(): Promise<PatientEvent[]> {
   await ensureDataFile();
   try {
     const raw = await fs.readFile(EVENTS_FILE, "utf8");
-    cache = JSON.parse(raw || "[]");
+    cache = JSON.parse(raw || "[]") as PatientEvent[];
     return cache;
   } catch (err) {
     cache = [];
