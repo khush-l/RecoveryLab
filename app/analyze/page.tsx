@@ -11,6 +11,7 @@ import DebugPanel from "@/components/analyze/debug-panel";
 import { Button } from "@/components/ui/button";
 import { RotateCcw, AlertCircle } from "lucide-react";
 import { extractVideoFrames } from "@/lib/extract-frames";
+import { analyzeGait } from "@/app/actions/analyze-gait";
 import type { GaitAnalysisResponse, DebugInfo } from "@/types/gait-analysis";
 
 type PageState = "upload" | "analyzing" | "results" | "error";
@@ -39,39 +40,12 @@ export default function AnalyzePage() {
       setGridPreview(preview);
       setAnalysisStep("analyzing");
 
-      // Send individual frames + timestamps as JSON
-      console.log(`[GaitGuard] Sending ${frames.length} frames to API...`);
-      const res = await fetch("/api/analyze-gait", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          frames,
-          timestamps,
-          duration,
-        }),
-      });
-
-      console.log(`[GaitGuard] API responded with status ${res.status}`);
-
-      const text = await res.text();
-      console.log(`[GaitGuard] Response body length: ${text.length}`);
-
-      let data;
-      try {
-        data = JSON.parse(text);
-      } catch (parseErr) {
-        console.error("[GaitGuard] Failed to parse response JSON:", parseErr);
-        throw new Error("Failed to parse analysis response");
-      }
+      // Call server action directly (bypasses Vercel's 4.5MB Route Handler body limit)
+      console.log(`[GaitGuard] Sending ${frames.length} frames via server action...`);
+      const data = await analyzeGait({ frames, timestamps, duration });
 
       if (data.debug) {
         setDebugInfo(data.debug);
-      }
-
-      if (!res.ok) {
-        throw new Error(
-          data?.error || `Analysis failed with status ${res.status}`
-        );
       }
 
       if (!data.success) {
