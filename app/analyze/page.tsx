@@ -42,7 +42,7 @@ export default function AnalyzePage() {
 
       // Call server action directly (bypasses Vercel's 4.5MB Route Handler body limit)
       console.log(`[GaitGuard] Sending ${frames.length} frames via server action...`);
-      const data = await analyzeGait({ frames, timestamps, duration });
+      const data = await analyzeGait(JSON.stringify({ frames, timestamps, duration }));
 
       if (data.debug) {
         setDebugInfo(data.debug);

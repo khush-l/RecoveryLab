@@ -101,16 +101,19 @@ function getMediaType(
 // Server Action: analyzeGait
 // ---------------------------------------------------------------------------
 
-export async function analyzeGait(input: {
-  frames: string[];
-  timestamps: number[];
-  duration: number;
-}): Promise<GaitAnalysisResponse | GaitAnalysisError> {
+export async function analyzeGait(
+  payload: string
+): Promise<GaitAnalysisResponse | GaitAnalysisError> {
   const sessionId = uuidv4();
   const timestamp = new Date().toISOString();
   const debug: DebugInfo = {};
 
   try {
+    const input = JSON.parse(payload) as {
+      frames: string[];
+      timestamps: number[];
+      duration: number;
+    };
     const { frames, timestamps, duration: videoDuration } = input;
 
     if (!frames || !Array.isArray(frames) || frames.length < 4) {
