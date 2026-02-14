@@ -2,6 +2,7 @@
 
 import { v4 as uuidv4 } from "uuid";
 import Anthropic from "@anthropic-ai/sdk";
+import { del } from "@vercel/blob";
 
 import type {
   NvidiaVLMAnalysis,
@@ -80,21 +81,22 @@ function envNumber(key: string, fallback: number): number {
   return raw ? Number(raw) : fallback;
 }
 
-/** Strip `data:image/...;base64,` prefix to get raw base64 */
-function stripDataUrl(dataUrl: string): string {
-  const idx = dataUrl.indexOf(",");
-  return idx >= 0 ? dataUrl.slice(idx + 1) : dataUrl;
-}
-
-/** Extract the media type from a data URL (e.g. "image/jpeg") */
-function getMediaType(
-  dataUrl: string
-): "image/jpeg" | "image/png" | "image/gif" | "image/webp" {
-  const match = dataUrl.match(/^data:(image\/\w+);/);
-  const type = match?.[1];
-  if (type === "image/png" || type === "image/gif" || type === "image/webp")
-    return type;
-  return "image/jpeg";
+/** Fetch a blob URL and return { base64, mediaType } */
+async function fetchBlobAsBase64(url: string): Promise<{
+  base64: string;
+  mediaType: "image/jpeg" | "image/png" | "image/gif" | "image/webp";
+}> {
+  const res = await fetch(url);
+  if (!res.ok) throw new Error(`Failed to fetch blob: ${url}`);
+  const contentType = res.headers.get("content-type") || "image/jpeg";
+  const buffer = await res.arrayBuffer();
+  const base64 = Buffer.from(buffer).toString("base64");
+  const mediaType = (
+    ["image/png", "image/gif", "image/webp"].includes(contentType)
+      ? contentType
+      : "image/jpeg"
+  ) as "image/jpeg" | "image/png" | "image/gif" | "image/webp";
+  return { base64, mediaType };
 }
 
 // ---------------------------------------------------------------------------
@@ -108,15 +110,19 @@ export async function analyzeGait(
   const timestamp = new Date().toISOString();
   const debug: DebugInfo = {};
 
+  // Track blob URLs for cleanup
+  let blobUrls: string[] = [];
+
   try {
     const input = JSON.parse(payload) as {
-      frames: string[];
+      blobUrls: string[];
       timestamps: number[];
       duration: number;
     };
-    const { frames, timestamps, duration: videoDuration } = input;
+    blobUrls = input.blobUrls;
+    const { timestamps, duration: videoDuration } = input;
 
-    if (!frames || !Array.isArray(frames) || frames.length < 4) {
+    if (!blobUrls || !Array.isArray(blobUrls) || blobUrls.length < 4) {
       return {
         success: false,
         error: "Not enough frames provided. Please upload a video.",
@@ -125,18 +131,25 @@ export async function analyzeGait(
       } satisfies GaitAnalysisError;
     }
 
-    debug.grid_size_kb = Math.round(
-      frames.reduce((sum, f) => sum + f.length, 0) / 1024
-    );
-
     console.log("\n========== GAIT ANALYSIS REQUEST ==========");
     console.log(`Session: ${sessionId}`);
     console.log(`Video duration: ${videoDuration}s`);
-    console.log(`Frames: ${frames.length}`);
-    console.log(`Total frame data: ~${debug.grid_size_kb} KB`);
+    console.log(`Frames: ${blobUrls.length}`);
 
     // ------------------------------------------------------------------
-    // 1. Call Claude Opus 4.6 for visual gait analysis
+    // 1. Fetch all frames from Vercel Blob → base64
+    // ------------------------------------------------------------------
+
+    console.log(`\nFetching ${blobUrls.length} frames from Vercel Blob...`);
+    const frameData = await Promise.all(blobUrls.map(fetchBlobAsBase64));
+    const totalKb = Math.round(
+      frameData.reduce((sum, f) => sum + f.base64.length, 0) / 1024
+    );
+    debug.grid_size_kb = totalKb;
+    console.log(`Total frame data fetched: ~${totalKb} KB`);
+
+    // ------------------------------------------------------------------
+    // 2. Call Claude Opus 4.6 for visual gait analysis
     // ------------------------------------------------------------------
 
     let vlmAnalysis: NvidiaVLMAnalysis;
@@ -148,12 +161,12 @@ export async function analyzeGait(
 
       debug.vlm_model = vlmModel;
 
-      const vlmPrompt = buildVLMPrompt(videoDuration, frames.length, timestamps);
+      const vlmPrompt = buildVLMPrompt(videoDuration, blobUrls.length, timestamps);
       debug.vlm_prompt = vlmPrompt;
 
       console.log("\n---------- VLM REQUEST ----------");
       console.log(`Model: ${vlmModel}`);
-      console.log(`Sending ${frames.length} individual frames`);
+      console.log(`Sending ${frameData.length} individual frames`);
       console.log(`Prompt:\n${vlmPrompt}`);
 
       const vlmStart = Date.now();
@@ -166,13 +179,13 @@ export async function analyzeGait(
       const contentBlocks: Anthropic.MessageCreateParams["messages"][0]["content"] =
         [];
 
-      for (let i = 0; i < frames.length; i++) {
+      for (let i = 0; i < frameData.length; i++) {
         contentBlocks.push({
           type: "image",
           source: {
             type: "base64",
-            media_type: getMediaType(frames[i]),
-            data: stripDataUrl(frames[i]),
+            media_type: frameData[i].mediaType,
+            data: frameData[i].base64,
           },
         });
       }
@@ -223,7 +236,7 @@ export async function analyzeGait(
     }
 
     // ------------------------------------------------------------------
-    // 2. Generate coaching summary + use hardcoded exercises
+    // 3. Generate coaching summary + use hardcoded exercises
     // ------------------------------------------------------------------
 
     let coaching: CoachingPlan;
@@ -311,7 +324,7 @@ export async function analyzeGait(
     }
 
     // ------------------------------------------------------------------
-    // 3. Return combined response
+    // 4. Return combined response
     // ------------------------------------------------------------------
 
     console.log("\n========== ANALYSIS COMPLETE ==========\n");
@@ -334,5 +347,15 @@ export async function analyzeGait(
       stage: "unknown",
       debug,
     } satisfies GaitAnalysisError;
+  } finally {
+    // Clean up blobs regardless of success/failure
+    if (blobUrls.length > 0) {
+      try {
+        await del(blobUrls);
+        console.log(`Cleaned up ${blobUrls.length} blobs`);
+      } catch (cleanupErr) {
+        console.error("Blob cleanup failed:", cleanupErr);
+      }
+    }
   }
 }

@@ -12,6 +12,7 @@
     "@anthropic-ai/sdk": "^0.74.0",
     "@darshanpatel2608/human-body-react": "^1.2.9",
     "@heygen/liveavatar-web-sdk": "^0.0.10",
+    "@vercel/blob": "^2.2.0",
     "class-variance-authority": "^0.7.1",
     "clsx": "^2.1.1",
     "lucide-react": "^0.564.0",

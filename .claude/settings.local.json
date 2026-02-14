@@ -21,7 +21,8 @@
       "Bash(npx next build:*)",
       "Bash(git checkout:*)",
       "Bash(npm ls:*)",
-      "Bash(xxd:*)"
+      "Bash(xxd:*)",
+      "Bash(git -C \"C:/Users/fatma/Documents/GaitGuard\" status -- app/favicon.ico app/icon.svg)"
     ]
   }
 }

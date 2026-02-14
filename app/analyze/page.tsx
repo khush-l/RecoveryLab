@@ -38,11 +38,30 @@ export default function AnalyzePage() {
         await extractVideoFrames(file);
 
       setGridPreview(preview);
+
+      // Upload frames to Vercel Blob (bypasses Vercel's 4.5MB body limit)
+      console.log(`[GaitGuard] Uploading ${frames.length} frames to Vercel Blob...`);
+      const blobUrls: string[] = [];
+      for (let i = 0; i < frames.length; i++) {
+        const base64 = frames[i].split(",")[1];
+        const binary = atob(base64);
+        const bytes = new Uint8Array(binary.length);
+        for (let j = 0; j < binary.length; j++) bytes[j] = binary.charCodeAt(j);
+        const file = new File([bytes], `gait-frame-${i}.jpg`, { type: "image/jpeg" });
+        const form = new FormData();
+        form.append("file", file);
+        form.append("filename", `gait-frame-${i}.jpg`);
+        const res = await fetch("/api/upload", { method: "POST", body: form });
+        const { url } = await res.json();
+        if (!url) throw new Error(`Failed to upload frame ${i}`);
+        blobUrls.push(url);
+      }
+      console.log(`[GaitGuard] Uploaded ${blobUrls.length} frames to blob storage`);
+
       setAnalysisStep("analyzing");
 
-      // Call server action directly (bypasses Vercel's 4.5MB Route Handler body limit)
-      console.log(`[GaitGuard] Sending ${frames.length} frames via server action...`);
-      const data = await analyzeGait(JSON.stringify({ frames, timestamps, duration }));
+      // Server action fetches images from blob, sends base64 to Claude, then cleans up
+      const data = await analyzeGait(JSON.stringify({ blobUrls, timestamps, duration }));
 
       if (data.debug) {
         setDebugInfo(data.debug);
