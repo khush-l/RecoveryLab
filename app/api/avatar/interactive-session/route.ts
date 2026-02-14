@@ -28,7 +28,7 @@ import { addEventAdmin } from "@/lib/recoverai/store-admin";
 export async function POST(req: NextRequest) {
   try {
     const body = await req.json();
-    const { visual_analysis, coaching, avatar_id } = body;
+    const { visual_analysis, coaching, avatar_id, user_id } = body;
 
     if (!visual_analysis || !coaching) {
       return NextResponse.json(
@@ -95,6 +95,7 @@ export async function POST(req: NextRequest) {
       livekit_url,
       livekit_client_token,
       initial_message: initialMessage,
+      user_id: user_id || null,
     });
   } catch (error) {
     const message = error instanceof Error ? error.message : String(error);

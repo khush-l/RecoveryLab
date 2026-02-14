@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { get_weekly_summary } from "@/lib/recoverai/tools";
 import { sendWeeklySummary } from "@/lib/recoverai/poke";
+import { broadcastNotification } from "@/lib/notifications-admin";
 
 /**
  * POST /api/poke/send_weekly_summary
@@ -23,6 +24,20 @@ export async function POST(req: NextRequest) {
 
     // Send via Poke
     const result = await sendWeeklySummary(patient_id, phone_or_user_id, summaryText);
+
+    // Also broadcast to family contacts if user_id is provided
+    const userId = body.user_id;
+    if (userId) {
+      broadcastNotification({
+        userId,
+        type: "weekly_summary",
+        subject: "GaitGuard: Weekly Recovery Summary",
+        message: summaryText,
+      }).catch((err) =>
+        console.error("[WeeklySummary] Failed to broadcast to family:", err)
+      );
+    }
+
     return NextResponse.json({ success: true, summaryText, poke: result });
   } catch (err) {
     const message = err instanceof Error ? err.message : String(err);

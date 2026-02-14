@@ -1,5 +1,6 @@
 import { Resend } from "resend";
 import { addEventAdmin as addEvent, getEventsForPatientAdmin as getEventsForPatient, getEventsSinceAdmin as getEventsSince } from "@/lib/recoverai/store-admin";
+import { broadcastNotification } from "@/lib/notifications-admin";
 import type { PatientEvent } from "@/types/recoverai";
 
 const RED_FLAG_KEYWORDS = [
@@ -97,7 +98,7 @@ export async function get_weekly_summary(patient_id: string) {
   return { weeklyEvent, summaryText };
 }
 
-export async function flag_for_doctor({ patient_id, reason }: { patient_id: string; reason: string; }) {
+export async function flag_for_doctor({ patient_id, reason, user_id }: { patient_id: string; reason: string; user_id?: string; }) {
   // Build a small provider summary from recent events
   const recent = await getEventsForPatient(patient_id);
   const last5 = recent.slice(-10).reverse();
@@ -115,6 +116,18 @@ export async function flag_for_doctor({ patient_id, reason }: { patient_id: stri
     type: "flag_doctor",
     payload: { reason, providerSummary },
   });
+
+  // Broadcast to family contacts
+  if (user_id) {
+    broadcastNotification({
+      userId: user_id,
+      type: "doctor_flag",
+      subject: "GaitGuard: Important Health Alert",
+      message: `A health concern has been flagged for provider review. Reason: ${reason}. Please check in with your family member.`,
+    }).catch((err) =>
+      console.error("[FlagDoctor] Failed to broadcast to family:", err)
+    );
+  }
 
   return { flagEvent, providerSummary };
 }

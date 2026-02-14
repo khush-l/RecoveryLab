@@ -8,6 +8,7 @@ import SeverityBadge from "@/components/analyze/severity-badge";
 import ExerciseCard from "@/components/analyze/exercise-card";
 import type { GaitAnalysisResponse } from "@/types/gait-analysis";
 import BodyObservationMap from "@/components/analyze/body-observation-map";
+import { useAuth } from "@/components/auth-context";
 import {
   AlertTriangle,
   Clock,
@@ -101,6 +102,7 @@ export default function AnalysisResults({
   data,
   onNewAnalysis,
 }: AnalysisResultsProps) {
+  const { user } = useAuth();
   const { visual_analysis, coaching } = data;
   const [isCreatingConsultation, setIsCreatingConsultation] = useState(false);
   const [consultationError, setConsultationError] = useState<string | null>(null);
@@ -129,6 +131,7 @@ export default function AnalysisResults({
           visual_analysis: data.visual_analysis,
           coaching: data.coaching,
           session_id: data.session_id,
+          user_id: user?.uid,
         }),
       });
 

@@ -89,6 +89,20 @@ export default function AnalyzePage() {
         } catch (saveErr) {
           console.error("[GaitGuard] Failed to save analysis:", saveErr);
         }
+
+        // Notify family contacts about the new analysis
+        fetch("/api/notifications/send", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            user_id: user.uid,
+            type: "analysis_update",
+            subject: "GaitGuard: New Gait Analysis Complete",
+            message: `A new gait analysis has been completed. Gait type: ${analysisResult.visual_analysis.gait_type.replace(/_/g, " ")}, Severity: ${analysisResult.visual_analysis.severity_score}/10. ${analysisResult.coaching.explanation || ""}`,
+          }),
+        }).catch((err) =>
+          console.error("[GaitGuard] Failed to send family notifications:", err)
+        );
       }
     } catch (err) {
       const message =

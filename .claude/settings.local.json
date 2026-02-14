@@ -23,7 +23,10 @@
       "Bash(npm ls:*)",
       "Bash(xxd:*)",
       "Bash(git -C \"C:/Users/fatma/Documents/GaitGuard\" status -- app/favicon.ico app/icon.svg)",
-      "Bash(npx tsc:*)"
+      "Bash(npx tsc:*)",
+      "Bash(node -e:*)",
+      "Bash(npx dotenv:*)",
+      "Bash(node:*)"
     ]
   }
 }

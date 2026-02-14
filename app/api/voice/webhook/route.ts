@@ -48,6 +48,7 @@ export async function POST(req: NextRequest) {
       conversation_history,
       visual_analysis,
       coaching,
+      user_id,
     } = body;
 
     if (!transcript) {
@@ -82,6 +83,7 @@ export async function POST(req: NextRequest) {
           conversation_history: conversation_history || [],
           visual_analysis,
           coaching,
+          user_id,
         }),
       });
 

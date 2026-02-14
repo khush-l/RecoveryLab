@@ -7,7 +7,7 @@ import Logo from "@/components/logo";
 import CTAButton from "@/components/ui/button-cta";
 import { useAuth } from "@/components/auth-context";
 import { signOut } from "@/lib/firebase-auth";
-import { Menu, X, LogOut, LayoutDashboard } from "lucide-react";
+import { Menu, X, LogOut, LayoutDashboard, Bell } from "lucide-react";
 
 const headerNavLinks = [
   { href: "#features", label: "Features" },
@@ -106,6 +106,13 @@ export default function Header({ solid = false }: HeaderProps) {
                       >
                         <LayoutDashboard className="h-4 w-4" />
                         Dashboard
+                      </Link>
+                      <Link
+                        href="/notifications"
+                        className="inline-flex items-center gap-1.5 rounded-full px-3.5 py-1.5 text-sm font-semibold text-[#202020] transition-colors hover:bg-[rgba(32,32,32,0.05)]"
+                      >
+                        <Bell className="h-4 w-4" />
+                        Notifications
                       </Link>
                       <div className="mx-1 h-5 w-px bg-[rgba(32,32,32,0.1)]" />
                       <button
@@ -212,6 +219,11 @@ export default function Header({ solid = false }: HeaderProps) {
                   <Link href="/dashboard" onClick={closeMobileMenu}>
                     <CTAButton variant="primary" size="lg" className="w-full">
                       Dashboard
+                    </CTAButton>
+                  </Link>
+                  <Link href="/notifications" onClick={closeMobileMenu}>
+                    <CTAButton variant="secondary" size="lg" className="w-full">
+                      Notifications
                     </CTAButton>
                   </Link>
                   <button onClick={handleSignOut}>
