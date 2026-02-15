@@ -99,7 +99,16 @@ export async function DELETE(request: NextRequest): Promise<NextResponse> {
 
       const batch = adminDb.batch();
       sessionsSnap.docs.forEach((doc) => batch.delete(doc.ref));
-      if (sessionsSnap.docs.length > 0) {
+
+      // Also clear PT schedule events imported from PDF/text
+      const calendarSnap = await adminDb
+        .collection("users")
+        .doc(user_id)
+        .collection("calendar")
+        .get();
+      calendarSnap.docs.forEach((doc) => batch.delete(doc.ref));
+
+      if (sessionsSnap.docs.length > 0 || calendarSnap.docs.length > 0) {
         await batch.commit();
       }
     }
