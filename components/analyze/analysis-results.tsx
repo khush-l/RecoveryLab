@@ -175,7 +175,12 @@ export default function AnalysisResults({
         throw new Error(result.error || "Failed to create consultation session");
       }
 
-      // Navigate to custom consultation page with all session data
+      // Store gait_context in sessionStorage to avoid bloating the URL
+      // (large URL params cause Google Analytics 411 errors)
+      const consultationKey = `gait_context_${result.session_id}`;
+      sessionStorage.setItem(consultationKey, result.gait_context);
+
+      // Navigate to custom consultation page with session data (without gait_context in URL)
       const params = new URLSearchParams({
         session_id: result.session_id,
         session_token: result.session_token,
@@ -184,10 +189,9 @@ export default function AnalysisResults({
         ws_url: result.ws_url || "",
         avatar_id: result.avatar_id || "",
         avatar_name: result.avatar_name || "",
-        gait_context: result.gait_context,
         patient_id: data.session_id,
       });
-      
+
       window.open(`/consultation?${params.toString()}`, "_blank");
       
       setShowConsultationModal(false);

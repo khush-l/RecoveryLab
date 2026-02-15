@@ -38,6 +38,7 @@ export async function POST(req: NextRequest) {
       file: blob,
       modelId: "scribe_v1",
       languageCode: "en",
+      tagAudioEvents: false,
     });
 
     const text = ((result as any).text ?? "").trim();

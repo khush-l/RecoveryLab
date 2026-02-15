@@ -2,6 +2,7 @@
 
 import { useEffect, useRef, useState } from "react";
 import { Mic, MicOff } from "lucide-react";
+import { SPEECH_START_THRESHOLD, SPEECH_STOP_THRESHOLD, SILENCE_DURATION } from "@/lib/audio-config";
 
 interface LogEntry {
   time: string;
@@ -186,7 +187,13 @@ export default function MicTestPage() {
     addLog("info", "Requesting microphone permission...");
 
     try {
-      const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+      const stream = await navigator.mediaDevices.getUserMedia({
+        audio: {
+          echoCancellation: true,
+          noiseSuppression: true,
+          autoGainControl: true,
+        },
+      });
       micStreamRef.current = stream;
       setHasPermission(true);
 
@@ -217,9 +224,7 @@ export default function MicTestPage() {
       const dataArray = new Uint8Array(analyser.frequencyBinCount);
       // Two-threshold hysteresis: high threshold to START detecting speech,
       // low threshold to STOP — prevents background noise from resetting silence timer
-      const SPEECH_START_THRESHOLD = 0.10; // 10% RMS to start voice detection
-      const SPEECH_STOP_THRESHOLD = 0.03;  // 3% RMS to consider silence
-      const SILENCE_DURATION = 1500; // ms of silence before transcribing
+      // Thresholds imported from @/lib/audio-config
       let frameCount = 0;
 
       const poll = () => {

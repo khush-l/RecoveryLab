@@ -4,6 +4,7 @@ import { Suspense, useCallback, useEffect, useRef, useState } from "react";
 import { useSearchParams, useRouter } from "next/navigation";
 import { ArrowLeft, Mic, MicOff, Loader2, Send } from "lucide-react";
 import Link from "next/link";
+import { SPEECH_START_THRESHOLD, SPEECH_STOP_THRESHOLD, SILENCE_DURATION } from "@/lib/audio-config";
 
 interface Message {
   role: "user" | "assistant";
@@ -33,8 +34,23 @@ function ConsultationContent() {
   const wsUrl = searchParams.get("ws_url");
   const avatarId = searchParams.get("avatar_id");
   const avatarName = searchParams.get("avatar_name");
-  const gaitContext = searchParams.get("gait_context");
   const patientId = searchParams.get("patient_id");
+
+  // Read gait_context from sessionStorage (stored there to keep the URL short
+  // and avoid Google Analytics 411 errors from oversized URLs)
+  const [gaitContext, setGaitContext] = useState<string | null>(null);
+  useEffect(() => {
+    if (sessionId) {
+      const stored = sessionStorage.getItem(`gait_context_${sessionId}`);
+      if (stored) {
+        setGaitContext(stored);
+      } else {
+        // Fallback: check URL params for backwards compatibility
+        const fromUrl = searchParams.get("gait_context");
+        if (fromUrl) setGaitContext(fromUrl);
+      }
+    }
+  }, [sessionId, searchParams]);
 
   const router = useRouter();
   const videoRef = useRef<HTMLDivElement>(null);
@@ -225,7 +241,13 @@ function ConsultationContent() {
     // Get mic permission
     if (!micStreamRef.current) {
       try {
-        micStreamRef.current = await navigator.mediaDevices.getUserMedia({ audio: true });
+        micStreamRef.current = await navigator.mediaDevices.getUserMedia({
+          audio: {
+            echoCancellation: true,
+            noiseSuppression: true,
+            autoGainControl: true,
+          },
+        });
         console.log("[Consultation] Microphone stream acquired");
 
         // Set up Web Audio analyser for volume metering
@@ -243,9 +265,7 @@ function ConsultationContent() {
         // Two-threshold hysteresis: high threshold to START detecting speech,
         // low threshold to detect silence. Prevents background noise (~5-9% RMS)
         // from keeping the silence timer reset indefinitely.
-        const SPEECH_START_THRESHOLD = 0.10; // Must exceed this to begin speech detection
-        const SPEECH_STOP_THRESHOLD = 0.03;  // Must drop below this to trigger silence timer
-        const SILENCE_DURATION = 1500; // ms of silence before sending for transcription
+        // Thresholds imported from @/lib/audio-config
 
         const poll = () => {
           if (!analyserRef.current) return;
@@ -492,7 +512,26 @@ function ConsultationContent() {
       setIsSpeaking(true);
       setStatus("Therapist speaking... (you can interrupt)");
 
-      await audio.play();
+      try {
+        await audio.play();
+      } catch (playErr: any) {
+        // Browser blocked autoplay — wait for a user gesture then retry
+        if (playErr?.name === "NotAllowedError") {
+          console.warn("[Consultation] Autoplay blocked, waiting for user gesture...");
+          setStatus("Click anywhere to hear your therapist");
+          await new Promise<void>((resolve) => {
+            const resumePlayback = () => {
+              document.removeEventListener("click", resumePlayback);
+              document.removeEventListener("keydown", resumePlayback);
+              audio.play().then(resolve).catch(() => resolve());
+            };
+            document.addEventListener("click", resumePlayback, { once: true });
+            document.addEventListener("keydown", resumePlayback, { once: true });
+          });
+        } else {
+          throw playErr;
+        }
+      }
 
       await new Promise<void>((resolve) => {
         audio.onended = () => {
@@ -678,6 +717,13 @@ function ConsultationContent() {
                   })}
                 </div>
               </div>
+            )}
+
+            {/* Mic level percentage */}
+            {isListening && (
+              <span className="min-w-[3ch] text-right font-mono text-xs text-[rgba(32,32,32,0.4)]">
+                {Math.round(micLevel * 100)}%
+              </span>
             )}
 
             {/* Status text */}
