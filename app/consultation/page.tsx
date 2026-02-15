@@ -390,13 +390,10 @@ function ConsultationContent() {
         track.detach();
       });
 
-      room.on("connected", async () => {
+      room.on("connected", () => {
         console.log("[Consultation] Connected to LiveKit");
         setIsConnecting(false);
-        setStatus("Connected");
-
-        // Start mic and recording
-        await startMicAndRecording();
+        setStatus("Connected — click Unmute to speak");
 
         // Greeting is triggered by a separate useEffect that waits
         // for both connection AND gaitContext to be ready
