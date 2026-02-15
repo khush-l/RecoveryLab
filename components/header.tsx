@@ -10,10 +10,10 @@ import { signOut } from "@/lib/firebase-auth";
 import { Menu, X, LogOut, LayoutDashboard, Bell, Calendar } from "lucide-react";
 
 const headerNavLinks = [
-  { href: "#features", label: "Features" },
-  { href: "#how-it-works", label: "How It Works" },
-  { href: "#about", label: "About" },
-  { href: "#contact", label: "Contact" },
+  { href: "/#features", label: "Features" },
+  { href: "/#how-it-works", label: "How It Works" },
+  { href: "/#about", label: "About" },
+  { href: "/#contact", label: "Contact" },
 ];
 
 interface HeaderProps {

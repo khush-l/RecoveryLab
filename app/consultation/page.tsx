@@ -1,12 +1,26 @@
 "use client";
 
-import { useEffect, useRef, useState } from "react";
+import { Suspense, useEffect, useRef, useState } from "react";
 import { useSearchParams } from "next/navigation";
 import { ArrowLeft, Mic, MicOff, Video as VideoIcon, VideoOff, Loader2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import Link from "next/link";
 
 export default function ConsultationPage() {
+  return (
+    <Suspense
+      fallback={
+        <div className="flex min-h-screen items-center justify-center bg-gray-50">
+          <Loader2 className="h-8 w-8 animate-spin text-[#1DB3FB]" />
+        </div>
+      }
+    >
+      <ConsultationContent />
+    </Suspense>
+  );
+}
+
+function ConsultationContent() {
   const searchParams = useSearchParams();
   const sessionId = searchParams.get("session_id");
   const sessionToken = searchParams.get("session_token");
