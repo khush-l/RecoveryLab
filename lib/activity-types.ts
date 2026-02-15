@@ -16,7 +16,7 @@ export const ACTIVITY_TYPES: ActivityTypeConfig[] = [
     description: "Analyze walking patterns and identify movement abnormalities",
     icon: "Footprints",
     videoTip: "Record yourself walking for 10-15 seconds for best results (max 30s)",
-    analyzeButtonLabel: "Analyze Walking",
+    analyzeButtonLabel: "Analyze Gait",
   },
   {
     id: "stretching",
