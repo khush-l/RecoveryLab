@@ -9,6 +9,7 @@ import ExerciseCard from "@/components/analyze/exercise-card";
 import type { GaitAnalysisResponse } from "@/types/gait-analysis";
 import BodyObservationMap from "@/components/analyze/body-observation-map";
 import { useAuth } from "@/components/auth-context";
+import AddToCalendarButton from "@/components/analyze/add-to-calendar-button";
 import {
   AlertTriangle,
   Clock,
@@ -208,6 +209,13 @@ export default function AnalysisResults({
             <Video className="h-4 w-4" />
             Schedule Consultation
           </Button>
+          <AddToCalendarButton
+            exercises={coaching.exercises}
+            analysisDate={data.timestamp}
+            sessionId={data.session_id}
+            gaitType={visual_analysis.gait_type}
+            timeline={coaching.timeline}
+          />
           <Button
             variant="modern-outline"
             size="modern-lg"

@@ -26,7 +26,10 @@
       "Bash(npx tsc:*)",
       "Bash(node -e:*)",
       "Bash(npx dotenv:*)",
-      "Bash(node:*)"
+      "Bash(node:*)",
+      "WebFetch(domain:unsplash.com)",
+      "WebFetch(domain:api.unsplash.com)",
+      "Bash(curl:*)"
     ]
   }
 }
