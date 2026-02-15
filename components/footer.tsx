@@ -5,8 +5,6 @@ import Logo from "./logo";
 const footerMenuLinks = [
   { href: "/#features", label: "Features" },
   { href: "/#how-it-works", label: "How It Works" },
-  { href: "/#about", label: "About" },
-  { href: "/#contact", label: "Contact" },
 ];
 
 const footerLegalLinks = [
@@ -16,7 +14,7 @@ const footerLegalLinks = [
 
 function Footer() {
   return (
-    <footer className="relative -z-10 mt-auto">
+    <footer className="relative mt-auto">
       <div className="px-5 sm:px-8">
         <div className="relative mx-auto max-w-[1200px] py-12 pb-24">
           <div className="flex flex-col gap-10 sm:items-center sm:justify-between md:flex-row">

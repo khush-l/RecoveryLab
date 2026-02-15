@@ -32,7 +32,8 @@
       "Bash(curl:*)",
       "Bash(npx vercel:*)",
       "Bash(vercel env pull:*)",
-      "Bash(tccutil reset:*)"
+      "Bash(tccutil reset:*)",
+      "mcp__ide__getDiagnostics"
     ]
   }
 }

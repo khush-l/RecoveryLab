@@ -344,7 +344,7 @@ export default function CalendarPage() {
   if (!user) return null;
 
   return (
-    <div className="flex min-h-screen flex-col bg-[#f8fafb]">
+    <div className="flex min-h-screen flex-col">
       <Header solid />
       <main className="flex-1 px-5 pb-20 pt-28 sm:px-8 sm:pt-32">
         <div className="mx-auto w-full max-w-[1100px]">
@@ -359,34 +359,7 @@ export default function CalendarPage() {
               </p>
             </div>
             {hasCalendarAccess && (
-              <div className="flex flex-wrap items-center gap-2 self-start">
-                <UploadScheduleButton onScheduleAdded={fetchEvents} />
-                <a
-                  href="https://calendar.google.com"
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="inline-flex items-center gap-1.5 rounded-full border border-[rgba(32,32,32,0.08)] bg-white px-3.5 py-1.5 text-sm font-semibold text-[rgba(32,32,32,0.6)] shadow-sm transition-colors hover:border-[rgba(32,32,32,0.15)] hover:text-[#202020]"
-                >
-                  <ExternalLink className="h-3.5 w-3.5" />
-                  Google Calendar
-                </a>
-                {events.length > 0 && (
-                  <button
-                    onClick={() => setShowDeleteModal(true)}
-                    className="inline-flex items-center gap-1.5 rounded-full border border-red-100 bg-white px-3.5 py-1.5 text-sm font-semibold text-red-500 shadow-sm transition-colors hover:bg-red-50"
-                  >
-                    <Trash2 className="h-3.5 w-3.5" />
-                    Clear All
-                  </button>
-                )}
-                <button
-                  onClick={handleDisconnect}
-                  className="inline-flex items-center gap-1.5 rounded-full border border-[rgba(32,32,32,0.08)] bg-white px-3.5 py-1.5 text-sm font-semibold text-[rgba(32,32,32,0.6)] shadow-sm transition-colors hover:border-red-200 hover:text-red-500"
-                >
-                  <Unlink className="h-3.5 w-3.5" />
-                  Disconnect
-                </button>
-              </div>
+              <UploadScheduleButton onScheduleAdded={fetchEvents} />
             )}
           </div>
 
@@ -479,6 +452,35 @@ export default function CalendarPage() {
                     <RefreshCw className={`h-4 w-4 ${loadingEvents ? "animate-spin" : ""}`} />
                   </button>
                 </div>
+              </div>
+
+              {/* Secondary actions */}
+              <div className="mb-3 flex items-center justify-end gap-4 text-xs text-[rgba(32,32,32,0.4)]">
+                <a
+                  href="https://calendar.google.com"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="inline-flex items-center gap-1 transition-colors hover:text-[#202020]"
+                >
+                  <ExternalLink className="h-3 w-3" />
+                  Google Calendar
+                </a>
+                <button
+                  onClick={handleDisconnect}
+                  className="inline-flex items-center gap-1 transition-colors hover:text-red-500 cursor-pointer"
+                >
+                  <Unlink className="h-3 w-3" />
+                  Disconnect
+                </button>
+                {events.length > 0 && (
+                  <button
+                    onClick={() => setShowDeleteModal(true)}
+                    className="inline-flex items-center gap-1 text-red-400 transition-colors hover:text-red-500 cursor-pointer"
+                  >
+                    <Trash2 className="h-3 w-3" />
+                    Clear All
+                  </button>
+                )}
               </div>
 
               {/* Error */}

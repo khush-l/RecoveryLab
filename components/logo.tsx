@@ -42,7 +42,7 @@ function Logo({ className }: { className?: string }) {
           </linearGradient>
         </defs>
       </svg>
-      <span className="text-xl font-bold tracking-[-0.02em] text-[#202020]">
+      <span className="text-xl leading-none font-bold tracking-[-0.02em] text-[#202020]">
         RecoveryLab
       </span>
     </div>

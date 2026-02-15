@@ -72,11 +72,10 @@ export async function POST(request: NextRequest) {
 }
 
 async function calculateStreak(userId: string): Promise<StreakData> {
-  // Fetch all analyses ordered by timestamp
+  // Fetch all analyses from the top-level collection filtered by user_id
   const analysesSnap = await adminDb
-    .collection("users")
-    .doc(userId)
     .collection("analyses")
+    .where("user_id", "==", userId)
     .orderBy("timestamp", "desc")
     .get();
 

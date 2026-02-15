@@ -12,8 +12,6 @@ import { Menu, X, LogOut, LayoutDashboard, Bell, Calendar } from "lucide-react";
 const headerNavLinks = [
   { href: "/#features", label: "Features" },
   { href: "/#how-it-works", label: "How It Works" },
-  { href: "/#about", label: "About" },
-  { href: "/#contact", label: "Contact" },
 ];
 
 interface HeaderProps {
@@ -26,7 +24,9 @@ export default function Header({ solid = false }: HeaderProps) {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   const [hidden, setHidden] = useState(false);
   const [atTop, setAtTop] = useState(true);
+  const [profileOpen, setProfileOpen] = useState(false);
   const lastY = useRef(0);
+  const profileRef = useRef<HTMLDivElement>(null);
 
   const closeMobileMenu = () => setIsMenuOpen(false);
 
@@ -55,6 +55,16 @@ export default function Header({ solid = false }: HeaderProps) {
     window.addEventListener("scroll", handleScroll, { passive: true });
     return () => window.removeEventListener("scroll", handleScroll);
   }, [handleScroll]);
+
+  useEffect(() => {
+    function handleClickOutside(e: MouseEvent) {
+      if (profileRef.current && !profileRef.current.contains(e.target as Node)) {
+        setProfileOpen(false);
+      }
+    }
+    document.addEventListener("mousedown", handleClickOutside);
+    return () => document.removeEventListener("mousedown", handleClickOutside);
+  }, []);
 
   const isLoggedIn = !loading && !!user;
 
@@ -88,7 +98,7 @@ export default function Header({ solid = false }: HeaderProps) {
                     <Link
                       key={item.href}
                       href={item.href}
-                      className="text-base leading-[140%] text-[rgba(32,32,32,0.75)] transition-colors hover:text-[#202020]"
+                      className="text-base leading-none text-[rgba(32,32,32,0.75)] transition-colors hover:text-[#202020]"
                     >
                       {item.label}
                     </Link>
@@ -122,15 +132,44 @@ export default function Header({ solid = false }: HeaderProps) {
                         Calendar
                       </Link>
                       <div className="mx-1 h-5 w-px bg-[rgba(32,32,32,0.1)]" />
-                      <button
-                        onClick={handleSignOut}
-                        className="inline-flex items-center gap-1.5 rounded-full px-3 py-1.5 text-sm text-[rgba(32,32,32,0.6)] transition-colors hover:bg-[rgba(32,32,32,0.05)] hover:text-[#202020] cursor-pointer"
-                      >
-                        <LogOut className="h-3.5 w-3.5" />
-                        Sign out
-                      </button>
-                      <div className="flex h-8 w-8 items-center justify-center rounded-full bg-gradient-to-br from-[#1DB3FB] to-[#84A1FF] text-xs font-bold text-white">
-                        {(user.email?.[0] || "U").toUpperCase()}
+                      <div className="relative" ref={profileRef}>
+                        <button
+                          onClick={() => setProfileOpen(!profileOpen)}
+                          className="flex items-center gap-1.5 rounded-full p-0.5 transition-colors hover:bg-[rgba(32,32,32,0.05)] cursor-pointer"
+                          aria-label="Profile menu"
+                        >
+                          {user.photoURL ? (
+                            <img
+                              src={user.photoURL}
+                              alt="Profile"
+                              className="h-8 w-8 rounded-full object-cover"
+                              referrerPolicy="no-referrer"
+                            />
+                          ) : (
+                            <div className="flex h-8 w-8 items-center justify-center rounded-full bg-gradient-to-br from-[#1DB3FB] to-[#84A1FF] text-xs font-bold text-white">
+                              {(user.email?.[0] || "U").toUpperCase()}
+                            </div>
+                          )}
+                        </button>
+                        {profileOpen && (
+                          <div className="absolute right-0 mt-2 w-64 rounded-xl border border-[rgba(0,0,0,0.08)] bg-white shadow-lg">
+                            <div className="px-4 pt-3 pb-2 border-b border-[rgba(0,0,0,0.06)]">
+                              <p className="text-sm font-medium text-[#202020] truncate">
+                                {user.displayName || "User"}
+                              </p>
+                              <p className="text-xs text-[rgba(32,32,32,0.5)] truncate">
+                                {user.email}
+                              </p>
+                            </div>
+                            <button
+                              onClick={handleSignOut}
+                              className="flex w-full items-center gap-2 rounded-b-xl px-4 py-2 text-sm text-[rgba(32,32,32,0.6)] transition-colors hover:bg-[rgba(32,32,32,0.04)] hover:text-[#202020] cursor-pointer"
+                            >
+                              <LogOut className="h-3.5 w-3.5" />
+                              Sign out
+                            </button>
+                          </div>
+                        )}
                       </div>
                     </div>
                     <div className="flex gap-2 md:hidden">
@@ -223,6 +262,28 @@ export default function Header({ solid = false }: HeaderProps) {
 
               {isLoggedIn ? (
                 <div className="flex flex-col gap-2.5">
+                  <div className="flex items-center gap-3 rounded-xl bg-[rgba(0,0,0,0.03)] px-4 py-3 mb-1">
+                    {user.photoURL ? (
+                      <img
+                        src={user.photoURL}
+                        alt="Profile"
+                        className="h-10 w-10 rounded-full object-cover"
+                        referrerPolicy="no-referrer"
+                      />
+                    ) : (
+                      <div className="flex h-10 w-10 items-center justify-center rounded-full bg-gradient-to-br from-[#1DB3FB] to-[#84A1FF] text-sm font-bold text-white">
+                        {(user.email?.[0] || "U").toUpperCase()}
+                      </div>
+                    )}
+                    <div className="min-w-0">
+                      <p className="text-sm font-semibold text-[#202020] truncate">
+                        {user.displayName || "User"}
+                      </p>
+                      <p className="text-xs text-[rgba(32,32,32,0.5)] truncate">
+                        {user.email}
+                      </p>
+                    </div>
+                  </div>
                   <Link href="/dashboard" onClick={closeMobileMenu}>
                     <CTAButton variant="primary" size="lg" className="w-full">
                       Dashboard

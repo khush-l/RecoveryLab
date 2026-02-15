@@ -9,7 +9,6 @@ import VideoUpload from "@/components/analyze/video-upload";
 import AnalysisLoading from "@/components/analyze/analysis-loading";
 import AnalysisResults from "@/components/analyze/analysis-results";
 import DebugPanel from "@/components/analyze/debug-panel";
-import StreaksDisplay from "@/components/streaks-display";
 import { Button } from "@/components/ui/button";
 import { RotateCcw, AlertCircle } from "lucide-react";
 import { extractVideoFrames } from "@/lib/extract-frames";
@@ -208,11 +207,6 @@ function AnalyzePageInner() {
 
           {pageState === "upload" && (
             <>
-              {user && (
-                <div className="fade-in mb-8">
-                  <StreaksDisplay />
-                </div>
-              )}
               <VideoUpload
                 onVideoReady={handleVideoReady}
                 isAnalyzing={false}

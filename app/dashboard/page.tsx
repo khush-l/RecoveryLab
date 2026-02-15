@@ -12,6 +12,7 @@ import { getEventsForPatients } from "@/lib/recoverai/store";
 import { signOut } from "@/lib/firebase-auth";
 import type { PatientEvent } from "@/types/recoverai";
 import { Button } from "@/components/ui/button";
+import StreaksDisplay from "@/components/streaks-display";
 import {
   Activity,
   Calendar,
@@ -131,9 +132,31 @@ function AnalysisCard({ analysis, onDelete }: { analysis: StoredAnalysis; onDele
 function EventIcon({ event }: { event: PatientEvent }) {
   if (event.type === "checkin") {
     return (
-      <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-green-100">
-        <ClipboardCheck className="h-4 w-4 text-green-600" />
-      </div>
+      <svg width="32" height="32" viewBox="0 0 64 64" fill="none" xmlns="http://www.w3.org/2000/svg" className="shrink-0">
+        <g clipPath="url(#clip0_sms_icon)">
+          <rect width="64" height="64" rx="8" fill="#E3F5FF"/>
+          <circle cx="46" cy="99" r="90" fill="#75CBFF"/>
+          <ellipse cx="45.3906" cy="94" rx="65.5" ry="65" fill="#1DB3FB"/>
+          <ellipse cx="45.3906" cy="94" rx="65.5" ry="65" fill="url(#paint0_sms_icon)" fillOpacity="0.55"/>
+          <path d="M2.04146 12.2719L43.4825 5.31151C47.2951 4.67115 50.9049 7.24275 51.5453 11.0553L64.4425 87.843C65.0827 91.6555 62.5111 95.2655 58.6986 95.9058L17.2576 102.866C13.4451 103.507 9.83531 100.935 9.19484 97.1224L-3.70237 20.3347C-4.34273 16.5221 -1.77113 12.9123 2.04146 12.2719Z" fill="#75CBFF" stroke="white" strokeWidth="2"/>
+          <circle cx="12.4278" cy="19.7391" r="1.99928" transform="rotate(-9.53437 12.4278 19.7391)" fill="white"/>
+          <rect x="18.0117" y="16.7744" width="17.3271" height="3.99855" rx="1.99928" transform="rotate(-9.53437 18.0117 16.7744)" fill="white"/>
+          <circle cx="28" cy="43" r="18" fill="white"/>
+          <rect x="21.8535" y="37.3838" width="2.45374" height="4.90747" rx="1.22687" transform="rotate(-9.43027 21.8535 37.3838)" fill="#00395F"/>
+          <rect x="29.1152" y="36.1777" width="2.45374" height="4.90747" rx="1.22687" transform="rotate(-9.43027 29.1152 36.1777)" fill="#00395F"/>
+          <path d="M39.2223 43.2657C34.105 50.4215 24.1557 52.074 16.9999 46.9567" stroke="#00395F" strokeWidth="2.5" strokeLinecap="round"/>
+        </g>
+        <rect x="0.5" y="0.5" width="63" height="63" rx="7.5" stroke="#202020" strokeOpacity="0.04"/>
+        <defs>
+          <radialGradient id="paint0_sms_icon" cx="0" cy="0" r="1" gradientTransform="matrix(-29.4099 18.0489 -74.4188 -39.1019 19.5137 47.3867)" gradientUnits="userSpaceOnUse">
+            <stop stopColor="#4258FF"/>
+            <stop offset="1" stopColor="#4258FF" stopOpacity="0"/>
+          </radialGradient>
+          <clipPath id="clip0_sms_icon">
+            <rect width="64" height="64" rx="8" fill="white"/>
+          </clipPath>
+        </defs>
+      </svg>
     );
   }
   if (event.type === "weekly_summary") {
@@ -152,9 +175,29 @@ function EventIcon({ event }: { event: PatientEvent }) {
   }
   if (event.type === "consultation" || event.source === "zingage_call") {
     return (
-      <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-purple-100">
-        <Video className="h-4 w-4 text-purple-600" />
-      </div>
+      <svg width="32" height="32" viewBox="0 0 64 64" fill="none" xmlns="http://www.w3.org/2000/svg" className="shrink-0">
+        <g clipPath="url(#clip0_consult_icon)">
+          <rect width="64" height="64" rx="8" fill="#ECF2FF"/>
+          <circle cx="-33" cy="-24" r="95" fill="#CEDEFF"/>
+          <ellipse cx="-33.6094" cy="-24" rx="65.5" ry="65" fill="#84A1FF"/>
+          <ellipse cx="-33.6094" cy="-24" rx="65.5" ry="65" fill="url(#paint0_consult_icon)" fillOpacity="0.55"/>
+          <path d="M12.9786 14.8414L44.7951 6.08646C48.5224 5.06108 52.3757 7.25114 53.4014 10.9784L70.1864 71.9768C71.212 75.7041 69.0216 79.5573 65.2944 80.5831L33.478 89.3381C29.7505 90.3638 25.8973 88.1736 24.8717 84.4461L8.08664 23.4478C7.06096 19.7203 9.25117 15.8671 12.9786 14.8414Z" fill="#84A1FF" stroke="white" strokeWidth="2"/>
+          <circle cx="21.7121" cy="20.857" r="1.74995" transform="rotate(-15.3854 21.7121 20.857)" fill="white"/>
+          <rect x="26.3086" y="17.7771" width="15.1662" height="3.4999" rx="1.74995" transform="rotate(-15.3854 26.3086 17.7771)" fill="white"/>
+          <rect x="17.4453" y="39.7078" width="36.502" height="43.3742" rx="4" transform="rotate(-15.3854 17.4453 39.7078)" fill="#ECF2FF"/>
+          <path d="M37.6438 38.5385C37.9881 51.9946 30.5437 57.1114 23.7355 57.2857C16.9273 57.4599 11.263 51.9262 11.0839 44.9259C10.9048 37.9256 15.0189 32.2207 21.8271 32.0465C28.6353 31.8723 33.142 37.3566 33.3211 44.3569" stroke="#00395F" strokeWidth="2.5" strokeLinecap="round"/>
+        </g>
+        <rect x="0.5" y="0.5" width="63" height="63" rx="7.5" stroke="#202020" strokeOpacity="0.04"/>
+        <defs>
+          <linearGradient id="paint0_consult_icon" x1="2.99999" y1="28" x2="9" y2="-5" gradientUnits="userSpaceOnUse">
+            <stop stopColor="#3A4EE2"/>
+            <stop offset="1" stopColor="#3A4EE2" stopOpacity="0"/>
+          </linearGradient>
+          <clipPath id="clip0_consult_icon">
+            <rect width="64" height="64" rx="8" fill="white"/>
+          </clipPath>
+        </defs>
+      </svg>
     );
   }
   return (
@@ -238,7 +281,7 @@ function ActivityItem({ event, onClick }: { event: PatientEvent; onClick?: () =>
           {eventDescription(event)}
         </p>
         {clickable && (
-          <p className="mt-1 text-xs font-medium text-purple-500">
+          <p className="mt-1 text-xs font-medium text-[#84A1FF]">
             View transcript
           </p>
         )}
@@ -362,11 +405,16 @@ export default function DashboardPage() {
         <div className="mx-auto max-w-[1400px]">
           {/* Dashboard header */}
           <div className="mb-8 flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
-            <div>
-              <h1 className="text-2xl font-bold text-[#202020]">Dashboard</h1>
-              <p className="mt-1 text-sm text-[rgba(32,32,32,0.6)]">
-                {user.email}
-              </p>
+            <div className="flex flex-1 items-center gap-6">
+              <div className="shrink-0">
+                <h1 className="text-2xl font-bold text-[#202020]">Dashboard</h1>
+                <p className="mt-1 text-sm text-[rgba(32,32,32,0.6)]">
+                  {user.email}
+                </p>
+              </div>
+              <div className="hidden min-w-0 flex-1 lg:block">
+                <StreaksDisplay />
+              </div>
             </div>
             <div className="flex items-center gap-3">
               <Link
@@ -376,14 +424,11 @@ export default function DashboardPage() {
                 <Plus className="h-4 w-4" />
                 New Analysis
               </Link>
-              <button
-                onClick={handleSignOut}
-                className="inline-flex h-10 items-center gap-2 rounded-full border border-[rgba(32,32,32,0.12)] bg-white px-4 text-sm font-medium text-[rgba(32,32,32,0.7)] transition-all hover:bg-gray-50 hover:text-[#202020] cursor-pointer"
-              >
-                <LogOut className="h-4 w-4" />
-                Sign out
-              </button>
             </div>
+          </div>
+          {/* Streaks (mobile/tablet) */}
+          <div className="mb-8 lg:hidden">
+            <StreaksDisplay />
           </div>
 
           {/* Content */}

@@ -287,9 +287,29 @@ export default function AnalysisResults({
             </button>
 
             <div className="mb-4 flex items-center gap-3">
-              <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-gradient-to-b from-[#E0F5FF] to-white">
-                <Video className="h-5 w-5 text-[#1DB3FB]" />
-              </div>
+              <svg width="40" height="40" viewBox="0 0 64 64" fill="none" xmlns="http://www.w3.org/2000/svg" className="shrink-0">
+                <g clipPath="url(#clip0_consultation)">
+                  <rect width="64" height="64" rx="8" fill="#ECF2FF"/>
+                  <circle cx="-33" cy="-24" r="95" fill="#CEDEFF"/>
+                  <ellipse cx="-33.6094" cy="-24" rx="65.5" ry="65" fill="#84A1FF"/>
+                  <ellipse cx="-33.6094" cy="-24" rx="65.5" ry="65" fill="url(#paint0_consultation)" fillOpacity="0.55"/>
+                  <path d="M12.9786 14.8414L44.7951 6.08646C48.5224 5.06108 52.3757 7.25114 53.4014 10.9784L70.1864 71.9768C71.212 75.7041 69.0216 79.5573 65.2944 80.5831L33.478 89.3381C29.7505 90.3638 25.8973 88.1736 24.8717 84.4461L8.08664 23.4478C7.06096 19.7203 9.25117 15.8671 12.9786 14.8414Z" fill="#84A1FF" stroke="white" strokeWidth="2"/>
+                  <circle cx="21.7121" cy="20.857" r="1.74995" transform="rotate(-15.3854 21.7121 20.857)" fill="white"/>
+                  <rect x="26.3086" y="17.7771" width="15.1662" height="3.4999" rx="1.74995" transform="rotate(-15.3854 26.3086 17.7771)" fill="white"/>
+                  <rect x="17.4453" y="39.7078" width="36.502" height="43.3742" rx="4" transform="rotate(-15.3854 17.4453 39.7078)" fill="#ECF2FF"/>
+                  <path d="M37.6438 38.5385C37.9881 51.9946 30.5437 57.1114 23.7355 57.2857C16.9273 57.4599 11.263 51.9262 11.0839 44.9259C10.9048 37.9256 15.0189 32.2207 21.8271 32.0465C28.6353 31.8723 33.142 37.3566 33.3211 44.3569" stroke="#00395F" strokeWidth="2.5" strokeLinecap="round"/>
+                </g>
+                <rect x="0.5" y="0.5" width="63" height="63" rx="7.5" stroke="#202020" strokeOpacity="0.04"/>
+                <defs>
+                  <linearGradient id="paint0_consultation" x1="2.99999" y1="28" x2="9" y2="-5" gradientUnits="userSpaceOnUse">
+                    <stop stopColor="#3A4EE2"/>
+                    <stop offset="1" stopColor="#3A4EE2" stopOpacity="0"/>
+                  </linearGradient>
+                  <clipPath id="clip0_consultation">
+                    <rect width="64" height="64" rx="8" fill="white"/>
+                  </clipPath>
+                </defs>
+              </svg>
               <h3 className="text-lg font-bold text-[#202020]">Schedule Consultation</h3>
             </div>
 

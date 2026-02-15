@@ -1,8 +1,27 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import { Flame, TrendingUp, Award, Calendar } from "lucide-react";
+import { TrendingUp } from "lucide-react";
+import dynamic from "next/dynamic";
 import { useAuth } from "./auth-context";
+
+function createRiveDynamic(src: string) {
+  return dynamic(
+    () =>
+      import("@rive-app/react-canvas").then((mod) => {
+        const { useRive } = mod;
+        function RiveAnim() {
+          const { RiveComponent } = useRive({ src, autoplay: true });
+          return RiveComponent ? <RiveComponent /> : null;
+        }
+        return { default: RiveAnim };
+      }),
+    { ssr: false }
+  );
+}
+
+const StreakRive = createRiveDynamic("/animations/Streak_1.riv");
+const RatingsRive = createRiveDynamic("/animations/Ratings_1.riv");
 
 interface StreakData {
   current_streak: number;
@@ -44,72 +63,56 @@ export default function StreaksDisplay() {
   const { current_streak, longest_streak, total_analyses, streak_active } = streakData;
 
   return (
-    <div className="grid grid-cols-1 gap-4 sm:grid-cols-3">
+    <div className="flex items-center rounded-full border border-[rgba(32,32,32,0.08)] bg-white shadow-sm">
       {/* Current Streak */}
-      <div className="relative overflow-hidden rounded-xl border border-[rgba(32,32,32,0.08)] bg-gradient-to-br from-orange-50 to-white p-5 shadow-sm">
-        <div className="flex items-start justify-between">
-          <div>
-            <p className="text-xs font-medium text-[rgba(32,32,32,0.5)]">Current Streak</p>
-            <p className="mt-2 text-3xl font-bold text-[#202020]">
-              {current_streak}
-              <span className="ml-1 text-lg font-normal text-[rgba(32,32,32,0.4)]">
-                {current_streak === 1 ? "day" : "days"}
-              </span>
-            </p>
-            {streak_active && current_streak > 0 && (
-              <p className="mt-1 text-xs font-medium text-orange-600">🔥 Keep it going!</p>
-            )}
-            {!streak_active && current_streak === 0 && (
-              <p className="mt-1 text-xs font-medium text-[rgba(32,32,32,0.4)]">
-                Start your streak today
-              </p>
-            )}
-          </div>
-          <div className="flex h-12 w-12 items-center justify-center rounded-full bg-gradient-to-br from-orange-400 to-orange-500 shadow-lg">
-            <Flame className="h-6 w-6 text-white" />
-          </div>
+      <div className="flex flex-1 items-center gap-3 px-5 py-1.5">
+        <div className="h-16 w-16 shrink-0">
+          <StreakRive />
+        </div>
+        <div>
+          <p className="text-[11px] font-medium text-[rgba(32,32,32,0.45)]">Current Streak</p>
+          <p className="text-xl font-bold text-[#202020]">
+            {current_streak}
+            <span className="ml-1 text-sm font-normal text-[rgba(32,32,32,0.4)]">
+              {current_streak === 1 ? "day" : "days"}
+            </span>
+          </p>
         </div>
       </div>
+
+      <div className="h-10 w-px bg-[rgba(32,32,32,0.06)]" />
 
       {/* Longest Streak */}
-      <div className="relative overflow-hidden rounded-xl border border-[rgba(32,32,32,0.08)] bg-gradient-to-br from-violet-50 to-white p-5 shadow-sm">
-        <div className="flex items-start justify-between">
-          <div>
-            <p className="text-xs font-medium text-[rgba(32,32,32,0.5)]">Longest Streak</p>
-            <p className="mt-2 text-3xl font-bold text-[#202020]">
-              {longest_streak}
-              <span className="ml-1 text-lg font-normal text-[rgba(32,32,32,0.4)]">
-                {longest_streak === 1 ? "day" : "days"}
-              </span>
-            </p>
-            {longest_streak > 0 && (
-              <p className="mt-1 text-xs font-medium text-violet-600">🏆 Personal best!</p>
-            )}
-          </div>
-          <div className="flex h-12 w-12 items-center justify-center rounded-full bg-gradient-to-br from-violet-400 to-violet-500 shadow-lg">
-            <Award className="h-6 w-6 text-white" />
-          </div>
+      <div className="flex flex-1 items-center gap-3 px-5 py-1.5">
+        <div className="h-16 w-16 shrink-0">
+          <RatingsRive />
+        </div>
+        <div>
+          <p className="text-[11px] font-medium text-[rgba(32,32,32,0.45)]">Longest Streak</p>
+          <p className="text-xl font-bold text-[#202020]">
+            {longest_streak}
+            <span className="ml-1 text-sm font-normal text-[rgba(32,32,32,0.4)]">
+              {longest_streak === 1 ? "day" : "days"}
+            </span>
+          </p>
         </div>
       </div>
 
+      <div className="h-10 w-px bg-[rgba(32,32,32,0.06)]" />
+
       {/* Total Analyses */}
-      <div className="relative overflow-hidden rounded-xl border border-[rgba(32,32,32,0.08)] bg-gradient-to-br from-sky-50 to-white p-5 shadow-sm">
-        <div className="flex items-start justify-between">
-          <div>
-            <p className="text-xs font-medium text-[rgba(32,32,32,0.5)]">Total Analyses</p>
-            <p className="mt-2 text-3xl font-bold text-[#202020]">
-              {total_analyses}
-              <span className="ml-1 text-lg font-normal text-[rgba(32,32,32,0.4)]">
-                {total_analyses === 1 ? "session" : "sessions"}
-              </span>
-            </p>
-            {total_analyses >= 10 && (
-              <p className="mt-1 text-xs font-medium text-sky-600">💪 Dedicated!</p>
-            )}
-          </div>
-          <div className="flex h-12 w-12 items-center justify-center rounded-full bg-gradient-to-br from-sky-400 to-sky-500 shadow-lg">
-            <TrendingUp className="h-6 w-6 text-white" />
-          </div>
+      <div className="flex flex-1 items-center gap-3 px-5 py-1.5">
+        <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-gradient-to-b from-sky-300 to-sky-500 shadow-[0_4px_12px_rgba(56,189,248,0.4),0_2px_4px_rgba(56,189,248,0.3),inset_0_1px_1px_rgba(255,255,255,0.3)]">
+          <TrendingUp className="h-5 w-5 text-white drop-shadow-[0_1px_2px_rgba(0,0,0,0.2)]" />
+        </div>
+        <div>
+          <p className="text-[11px] font-medium text-[rgba(32,32,32,0.45)]">Total Analyses</p>
+          <p className="text-xl font-bold text-[#202020]">
+            {total_analyses}
+            <span className="ml-1 text-sm font-normal text-[rgba(32,32,32,0.4)]">
+              {total_analyses === 1 ? "session" : "sessions"}
+            </span>
+          </p>
         </div>
       </div>
     </div>
