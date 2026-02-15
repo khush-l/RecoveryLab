@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState, useCallback, useEffect } from "react";
+import React, { Suspense, useState, useCallback, useEffect } from "react";
 import { useSearchParams } from "next/navigation";
 import { cn } from "@/lib/utils";
 import Header from "@/components/header";
@@ -22,6 +22,14 @@ type PageState = "upload" | "analyzing" | "results" | "error";
 type AnalysisStep = "uploading" | "analyzing" | "coaching";
 
 export default function AnalyzePage() {
+  return (
+    <Suspense>
+      <AnalyzePageInner />
+    </Suspense>
+  );
+}
+
+function AnalyzePageInner() {
   const { user } = useAuth();
   const searchParams = useSearchParams();
   const [pageState, setPageState] = useState<PageState>("upload");
