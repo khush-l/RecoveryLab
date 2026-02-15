@@ -42,7 +42,19 @@ export async function GET(req: NextRequest) {
 export async function POST(req: NextRequest) {
   try {
     const body = await req.json();
-    const { user_id, name, relationship, phone, email, notifications, channels } = body;
+    const { 
+      user_id, 
+      name, 
+      relationship, 
+      role, 
+      phone, 
+      email, 
+      organization, 
+      license_number, 
+      notifications, 
+      channels,
+      preferences 
+    } = body;
 
     if (!user_id || !name || !relationship) {
       return NextResponse.json(
@@ -63,28 +75,57 @@ export async function POST(req: NextRequest) {
       user_id,
       name,
       relationship,
+      role: role || "family",
       phone: phone || undefined,
       email: email || undefined,
+      organization: organization || undefined,
+      license_number: license_number || undefined,
       notifications: notifications || {
         analysis_update: true,
         weekly_summary: true,
         doctor_flag: true,
+        progress_milestone: true,
+        exercise_completion: false,
+        medical_report: false,
+        insurance_update: false,
+        appointment_reminder: true,
       },
       channels: channels || {
         sms: !!phone,
         email: !!email,
       },
+      preferences: preferences || {
+        frequency: "realtime",
+        data_access_level: role === "doctor" || role === "physical_therapist" ? "full_medical" : "basic",
+      },
       created_at: now,
       updated_at: now,
+      welcome_email_sent: false,
     };
 
     // Strip undefined values for Firestore
     const sanitized = JSON.parse(JSON.stringify(contact));
     const docRef = await adminDb.collection(COLLECTION).add(sanitized);
 
+    const newContact = { id: docRef.id, ...sanitized };
+
+    // Send welcome email if email is provided and channel enabled
+    if (email && channels?.email) {
+      try {
+        await fetch(`${process.env.NEXT_PUBLIC_APP_URL || "http://localhost:3000"}/api/notifications/send-welcome`, {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ contact: newContact }),
+        });
+      } catch (welcomeErr) {
+        console.error("[Contacts] Failed to send welcome email:", welcomeErr);
+        // Don't fail the contact creation if welcome email fails
+      }
+    }
+
     return NextResponse.json({
       success: true,
-      contact: { id: docRef.id, ...sanitized },
+      contact: newContact,
     });
   } catch (err) {
     const message = err instanceof Error ? err.message : String(err);

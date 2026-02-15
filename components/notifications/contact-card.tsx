@@ -2,7 +2,7 @@
 
 import { useState } from "react";
 import type { FamilyContact } from "@/types/notifications";
-import { Phone, Mail, Pencil, Trash2 } from "lucide-react";
+import { Phone, Mail, Pencil, Trash2, Building2, Award } from "lucide-react";
 
 interface ContactCardProps {
   contact: FamilyContact;
@@ -75,6 +75,16 @@ export default function ContactCard({
           <p className="text-xs text-[rgba(32,32,32,0.5)]">
             {contact.relationship}
           </p>
+          <div className="mt-1 flex items-center gap-1.5">
+            <span className="inline-block rounded-full bg-[#E0F5FF] px-2 py-0.5 text-[10px] font-semibold text-[#1DB3FB]">
+              {contact.role.replace('_', ' ').toUpperCase()}
+            </span>
+            {contact.preferences?.data_access_level === "full_medical" && (
+              <span className="inline-block rounded-full bg-blue-50 px-2 py-0.5 text-[10px] font-semibold text-blue-600">
+                FULL ACCESS
+              </span>
+            )}
+          </div>
         </div>
         <div className="flex gap-1">
           <button
@@ -107,6 +117,18 @@ export default function ContactCard({
             {contact.email}
           </div>
         )}
+        {contact.organization && (
+          <div className="flex items-center gap-2 text-xs text-[rgba(32,32,32,0.6)]">
+            <Building2 className="h-3 w-3" />
+            {contact.organization}
+          </div>
+        )}
+        {contact.license_number && (
+          <div className="flex items-center gap-2 text-xs text-[rgba(32,32,32,0.6)]">
+            <Award className="h-3 w-3" />
+            License: {contact.license_number}
+          </div>
+        )}
       </div>
 
       {/* Channels */}
@@ -134,28 +156,66 @@ export default function ContactCard({
       <div className="border-t border-[rgba(32,32,32,0.06)] pt-3">
         <p className="mb-2 text-xs font-semibold text-[#202020]">Notify for</p>
         <div className="space-y-2">
-          <Toggle
-            checked={contact.notifications.analysis_update}
-            onChange={(v) =>
-              onToggleNotification(contact.id, "analysis_update", v)
-            }
-            label="New analysis"
-          />
-          <Toggle
-            checked={contact.notifications.weekly_summary}
-            onChange={(v) =>
-              onToggleNotification(contact.id, "weekly_summary", v)
-            }
-            label="Weekly summary"
-          />
-          <Toggle
-            checked={contact.notifications.doctor_flag}
-            onChange={(v) =>
-              onToggleNotification(contact.id, "doctor_flag", v)
-            }
-            label="Doctor flags"
-          />
+          {contact.notifications.analysis_update !== undefined && (
+            <Toggle
+              checked={contact.notifications.analysis_update}
+              onChange={(v) =>
+                onToggleNotification(contact.id, "analysis_update", v)
+              }
+              label="New analysis"
+            />
+          )}
+          {contact.notifications.weekly_summary !== undefined && (
+            <Toggle
+              checked={contact.notifications.weekly_summary}
+              onChange={(v) =>
+                onToggleNotification(contact.id, "weekly_summary", v)
+              }
+              label="Weekly summary"
+            />
+          )}
+          {contact.notifications.doctor_flag !== undefined && (
+            <Toggle
+              checked={contact.notifications.doctor_flag}
+              onChange={(v) =>
+                onToggleNotification(contact.id, "doctor_flag", v)
+              }
+              label="Health alerts"
+            />
+          )}
+          {contact.notifications.progress_milestone !== undefined && (
+            <Toggle
+              checked={contact.notifications.progress_milestone}
+              onChange={(v) =>
+                onToggleNotification(contact.id, "progress_milestone", v)
+              }
+              label="Milestones"
+            />
+          )}
+          {contact.notifications.medical_report !== undefined && (
+            <Toggle
+              checked={contact.notifications.medical_report}
+              onChange={(v) =>
+                onToggleNotification(contact.id, "medical_report", v)
+              }
+              label="Medical reports"
+            />
+          )}
+          {contact.notifications.insurance_update !== undefined && (
+            <Toggle
+              checked={contact.notifications.insurance_update}
+              onChange={(v) =>
+                onToggleNotification(contact.id, "insurance_update", v)
+              }
+              label="Insurance"
+            />
+          )}
         </div>
+        {contact.preferences?.frequency && (
+          <p className="mt-3 text-[10px] text-[rgba(32,32,32,0.4)]">
+            Frequency: {contact.preferences.frequency.replace('_', ' ')}
+          </p>
+        )}
       </div>
     </div>
   );
