@@ -33,7 +33,8 @@
       "Bash(npx vercel:*)",
       "Bash(vercel env pull:*)",
       "Bash(tccutil reset:*)",
-      "mcp__ide__getDiagnostics"
+      "mcp__ide__getDiagnostics",
+      "Bash(identify:*)"
     ]
   }
 }
