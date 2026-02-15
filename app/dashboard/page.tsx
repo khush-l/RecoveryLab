@@ -290,7 +290,7 @@ export default function DashboardPage() {
         if (cancelled) return;
         const msg =
           err instanceof Error ? err.message : String(err);
-        console.error("[GaitGuard] Dashboard fetch error:", err);
+        console.error("[RecoveryLab] Dashboard fetch error:", err);
         setFetchError(msg);
       } finally {
         if (!cancelled) setFetching(false);

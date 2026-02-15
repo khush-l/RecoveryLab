@@ -122,7 +122,7 @@ export async function flag_for_doctor({ patient_id, reason, user_id }: { patient
     broadcastNotification({
       userId: user_id,
       type: "doctor_flag",
-      subject: "GaitGuard: Important Health Alert",
+      subject: "RecoveryLab: Important Health Alert",
       message: `A health concern has been flagged for provider review. Reason: ${reason}. Please check in with your family member.`,
     }).catch((err) =>
       console.error("[FlagDoctor] Failed to broadcast to family:", err)

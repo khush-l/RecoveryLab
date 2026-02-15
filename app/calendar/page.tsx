@@ -610,7 +610,7 @@ export default function CalendarPage() {
             </div>
 
             <p className="mb-6 text-sm leading-[170%] text-[rgba(32,32,32,0.65)]">
-              This will permanently delete all GaitGuard exercise events from your Google Calendar. This action cannot be undone.
+              This will permanently delete all RecoveryLab exercise events from your Google Calendar. This action cannot be undone.
             </p>
 
             <div className="flex gap-3">

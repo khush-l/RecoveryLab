@@ -236,7 +236,7 @@ export async function POST(request: NextRequest): Promise<NextResponse> {
       busySlots.push({ startMin: actualMin, endMin: endTotalMin });
 
       const description = [
-        `GaitGuard Exercise Plan — ${gait_type.replace(/_/g, " ")}`,
+        `RecoveryLab Exercise Plan — ${gait_type.replace(/_/g, " ")}`,
         `Session: ${session_id}`,
         "",
         `Instructions:`,

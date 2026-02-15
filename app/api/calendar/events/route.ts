@@ -57,13 +57,13 @@ export async function GET(request: NextRequest): Promise<NextResponse> {
 
     const allItems = response.data.items || [];
 
-    // Filter to GaitGuard events — check description and summary with loose matching
+    // Filter to RecoveryLab events — check description and summary with loose matching
     const gaitGuardEvents = allItems.filter((e) => {
       const desc = (e.description || "").toLowerCase();
       const summary = (e.summary || "").toLowerCase();
       return (
-        desc.includes("gaitguard") ||
-        summary.includes("gaitguard") ||
+        desc.includes("recoverylab") ||
+        summary.includes("recoverylab") ||
         summary.includes("\u{1F3CB}") || // 🏋️ dumbbell emoji
         (desc.includes("exercise plan") && desc.includes("session:"))
       );
@@ -79,7 +79,7 @@ export async function GET(request: NextRequest): Promise<NextResponse> {
     }));
 
     console.log(
-      `[calendar/events] Found ${allItems.length} total events, ${gaitGuardEvents.length} GaitGuard events`
+      `[calendar/events] Found ${allItems.length} total events, ${gaitGuardEvents.length} RecoveryLab events`
     );
 
     return NextResponse.json({

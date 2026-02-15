@@ -43,7 +43,7 @@ function Logo({ className }: { className?: string }) {
         </defs>
       </svg>
       <span className="text-xl font-bold tracking-[-0.02em] text-[#202020]">
-        GaitGuard
+        RecoveryLab
       </span>
     </div>
   );

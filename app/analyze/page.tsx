@@ -73,7 +73,7 @@ function AnalyzePageInner() {
       setGridPreview(preview);
 
       // Upload frames to Vercel Blob (bypasses Vercel's 4.5MB body limit)
-      console.log(`[GaitGuard] Uploading ${frames.length} frames to Vercel Blob...`);
+      console.log(`[RecoveryLab] Uploading ${frames.length} frames to Vercel Blob...`);
       const blobUrls: string[] = [];
       for (let i = 0; i < frames.length; i++) {
         const base64 = frames[i].split(",")[1];
@@ -89,7 +89,7 @@ function AnalyzePageInner() {
         if (!url) throw new Error(`Failed to upload frame ${i}`);
         blobUrls.push(url);
       }
-      console.log(`[GaitGuard] Uploaded ${blobUrls.length} frames to blob storage`);
+      console.log(`[RecoveryLab] Uploaded ${blobUrls.length} frames to blob storage`);
 
       setAnalysisStep("analyzing");
 
@@ -121,9 +121,9 @@ function AnalyzePageInner() {
       if (user) {
         try {
           await saveAnalysis(user.uid, analysisResult);
-          console.log("[GaitGuard] Analysis saved to Firestore");
+          console.log("[RecoveryLab] Analysis saved to Firestore");
         } catch (saveErr) {
-          console.error("[GaitGuard] Failed to save analysis:", saveErr);
+          console.error("[RecoveryLab] Failed to save analysis:", saveErr);
         }
 
         // Notify family contacts about the new analysis
@@ -134,11 +134,11 @@ function AnalyzePageInner() {
           body: JSON.stringify({
             user_id: user.uid,
             type: "analysis_update",
-            subject: `GaitGuard: New ${activityLabel} Complete`,
+            subject: `RecoveryLab: New ${activityLabel} Complete`,
             message: `A new ${activityLabel.toLowerCase()} has been completed. Type: ${analysisResult.visual_analysis.gait_type.replace(/_/g, " ")}, Severity: ${analysisResult.visual_analysis.severity_score}/10. ${analysisResult.coaching.explanation || ""}`,
           }),
         }).catch((err) =>
-          console.error("[GaitGuard] Failed to send family notifications:", err)
+          console.error("[RecoveryLab] Failed to send family notifications:", err)
         );
       }
     } catch (err) {

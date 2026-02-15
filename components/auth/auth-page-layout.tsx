@@ -53,7 +53,7 @@ export default function AuthPageLayout({ children }: AuthPageLayoutProps) {
                 <span className="text-gradient">better movement</span>
               </h1>
               <p className="mb-8 text-lg leading-relaxed text-[rgba(32,32,32,0.7)]">
-                GaitGuard uses AI to analyze your movement and provides
+                RecoveryLab uses AI to analyze your movement and provides
                 personalized exercises to help you recover faster.
               </p>
 

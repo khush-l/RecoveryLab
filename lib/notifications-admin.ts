@@ -8,7 +8,7 @@ const resend = process.env.RESEND_API_KEY
   ? new Resend(process.env.RESEND_API_KEY)
   : null;
 
-const FROM_EMAIL = process.env.FROM_EMAIL || "GaitGuard <notifications@gaitguard.com>";
+const FROM_EMAIL = process.env.FROM_EMAIL || "RecoveryLab <notifications@recoverylab.com>";
 const CONTACTS_COLLECTION = "contacts";
 const HISTORY_COLLECTION = "notification_history";
 

@@ -183,7 +183,7 @@ export default function Home() {
                   </h3>
                 </div>
                 <p className="text-base leading-[140%] text-[rgba(32,32,32,0.75)]">
-                  NVIDIA VLM analyzes your video frame by frame to identify movement patterns and abnormalities.
+                  Our fine-tuned vision model analyzes your video frame by frame to identify movement patterns and abnormalities.
                 </p>
               </div>
 
@@ -263,7 +263,7 @@ export default function Home() {
                 How it <span className="text-gradient">works</span>
               </h2>
               <p className="mx-auto mt-4 max-w-lg text-base leading-[140%] text-[rgba(32,32,32,0.75)]">
-                Three simple steps to get started with GaitGuard.
+                Three simple steps to get started with RecoveryLab.
               </p>
             </div>
 
@@ -277,7 +277,7 @@ export default function Home() {
                 {
                   step: "02",
                   title: "AI Analysis",
-                  description: "NVIDIA's vision AI analyzes your movement patterns, detecting asymmetries, postural issues, and abnormalities.",
+                  description: "Our vision AI analyzes your movement patterns, detecting asymmetries, postural issues, and abnormalities.",
                 },
                 {
                   step: "03",
@@ -309,7 +309,7 @@ export default function Home() {
                 Ready to improve your <span className="text-gradient">movement</span>?
               </h2>
               <p className="mx-auto mt-4 max-w-md text-base leading-[140%] text-[rgba(32,32,32,0.75)]">
-                Join GaitGuard today and take the first step towards better
+                Join RecoveryLab today and take the first step towards better
                 movement health.
               </p>
               <div className="mt-8 flex justify-center">

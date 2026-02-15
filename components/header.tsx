@@ -74,7 +74,7 @@ export default function Header({ solid = false }: HeaderProps) {
                 <Link
                   href="/"
                   className="flex items-center gap-1.5"
-                  aria-label="GaitGuard home"
+                  aria-label="RecoveryLab home"
                   onClick={closeMobileMenu}
                 >
                   <Logo />

@@ -22,7 +22,7 @@ export async function POST(req: NextRequest) {
     const results = await broadcastNotification({
       userId: user_id,
       type,
-      subject: subject || `GaitGuard: ${type.replace(/_/g, " ")}`,
+      subject: subject || `RecoveryLab: ${type.replace(/_/g, " ")}`,
       message,
     });
 

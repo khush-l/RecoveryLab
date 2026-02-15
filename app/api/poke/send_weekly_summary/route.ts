@@ -31,7 +31,7 @@ export async function POST(req: NextRequest) {
       broadcastNotification({
         userId,
         type: "weekly_summary",
-        subject: "GaitGuard: Weekly Recovery Summary",
+        subject: "RecoveryLab: Weekly Recovery Summary",
         message: summaryText,
       }).catch((err) =>
         console.error("[WeeklySummary] Failed to broadcast to family:", err)

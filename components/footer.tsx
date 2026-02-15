@@ -24,7 +24,7 @@ function Footer() {
             <div className="flex flex-col gap-6">
               <Logo className="w-full sm:w-[456px] md:w-[256px]" />
               <p className="hidden text-center text-base leading-[140%] text-[rgba(32,32,32,0.75)] sm:block">
-                &copy; 2025 GaitGuard. All rights reserved.
+                &copy; 2025 RecoveryLab. All rights reserved.
               </p>
             </div>
 
@@ -68,7 +68,7 @@ function Footer() {
             </div>
 
             <p className="text-base leading-[140%] text-[rgba(32,32,32,0.75)] sm:hidden">
-              &copy; 2025 GaitGuard. All rights reserved.
+              &copy; 2025 RecoveryLab. All rights reserved.
             </p>
           </div>
         </div>

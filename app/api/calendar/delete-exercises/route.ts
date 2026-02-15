@@ -53,9 +53,9 @@ export async function DELETE(request: NextRequest): Promise<NextResponse> {
 
     const allItems = response.data.items || [];
     const gaitGuardEvents = allItems.filter((e) => {
-      const isGaitGuard =
-        e.description?.includes("GaitGuard") || e.summary?.includes("🏋️");
-      if (!isGaitGuard) return false;
+      const isRecoveryLab =
+        e.description?.includes("RecoveryLab") || e.summary?.includes("🏋️");
+      if (!isRecoveryLab) return false;
       // If session_id provided, only match events for that session
       if (session_id) {
         return e.description?.includes(`Session: ${session_id}`);
