@@ -77,7 +77,7 @@ export default function ContactCard({
           </p>
           <div className="mt-1 flex items-center gap-1.5">
             <span className="inline-block rounded-full bg-[#E0F5FF] px-2 py-0.5 text-[10px] font-semibold text-[#1DB3FB]">
-              {contact.role.replace('_', ' ').toUpperCase()}
+              {contact.role ? contact.role.replace('_', ' ').toUpperCase() : 'FAMILY'}
             </span>
             {contact.preferences?.data_access_level === "full_medical" && (
               <span className="inline-block rounded-full bg-blue-50 px-2 py-0.5 text-[10px] font-semibold text-blue-600">

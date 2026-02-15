@@ -137,7 +137,7 @@ function getWelcomeEmailTemplate(contact: FamilyContact): { subject: string; htm
         </div>
         <div class="content">
           ${template.greeting}
-          <div class="badge">${contact.relationship} • ${contact.role.replace('_', ' ').toUpperCase()}</div>
+          <div class="badge">${contact.relationship} • ${contact.role ? contact.role.replace('_', ' ').toUpperCase() : 'FAMILY'}</div>
           <p>${template.intro}</p>
           ${template.body}
           <p><strong>Notification Preferences:</strong></p>

@@ -23,9 +23,29 @@ export async function GET(req: NextRequest) {
       .where("user_id", "==", userId)
       .get();
 
-    const contacts = snap.docs.map(
-      (d) => ({ id: d.id, ...d.data() } as FamilyContact)
-    );
+    const contacts = snap.docs.map((d) => {
+      const data = d.data() as FamilyContact;
+      // Add default values for backward compatibility
+      return {
+        ...data,
+        id: d.id,
+        role: data.role || "family",
+        preferences: data.preferences || {
+          frequency: "realtime",
+          data_access_level: "basic",
+        },
+        notifications: {
+          analysis_update: data.notifications?.analysis_update ?? true,
+          weekly_summary: data.notifications?.weekly_summary ?? true,
+          doctor_flag: data.notifications?.doctor_flag ?? true,
+          progress_milestone: data.notifications?.progress_milestone ?? true,
+          exercise_completion: data.notifications?.exercise_completion ?? false,
+          medical_report: data.notifications?.medical_report ?? false,
+          insurance_update: data.notifications?.insurance_update ?? false,
+          appointment_reminder: data.notifications?.appointment_reminder ?? true,
+        },
+      } as FamilyContact;
+    });
     contacts.sort((a, b) => b.created_at.localeCompare(a.created_at));
 
     return NextResponse.json({ success: true, contacts });

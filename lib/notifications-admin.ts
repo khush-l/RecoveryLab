@@ -96,7 +96,7 @@ function generateEmailHTML(
           </div>
           <p style="color: #808080; font-size: 13px;">
             <span class="badge">${contact.relationship}</span>
-            <span class="badge">${contact.role.replace('_', ' ').toUpperCase()}</span>
+            <span class="badge">${contact.role ? contact.role.replace('_', ' ').toUpperCase() : 'FAMILY'}</span>
           </p>
           <div style="text-align: center;">
             <a href="${process.env.NEXT_PUBLIC_APP_URL || 'https://recoverylab.app'}" class="button">View Full Details</a>
