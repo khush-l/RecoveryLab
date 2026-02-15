@@ -12,7 +12,7 @@ interface AnalysisLoadingProps {
 }
 
 const ACTIVITY_ANALYZE_LABELS: Record<string, string> = {
-  gait: "Analyzing gait patterns",
+  gait: "Analyzing movement patterns",
   stretching: "Analyzing stretching form",
   balance: "Analyzing balance & stability",
   strength: "Analyzing exercise form",
@@ -20,7 +20,7 @@ const ACTIVITY_ANALYZE_LABELS: Record<string, string> = {
 };
 
 const ACTIVITY_HEADER_LABELS: Record<string, string> = {
-  gait: "Analyzing your gait",
+  gait: "Analyzing your movement",
   stretching: "Analyzing your stretching",
   balance: "Analyzing your balance",
   strength: "Analyzing your form",

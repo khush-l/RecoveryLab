@@ -475,7 +475,7 @@ export default function AnalysisResults({
           {/* Gait type */}
           <div className="flex-1 text-center sm:text-left">
             <p className="mb-1 text-xs font-semibold uppercase tracking-wider text-[rgba(32,32,32,0.45)]">
-              {activityType === "gait" ? "Detected Gait Pattern" : `${activityConfig.label} Results`}
+              {activityType === "gait" ? "Detected Movement Pattern" : `${activityConfig.label} Results`}
             </p>
             <p className="text-2xl font-bold tracking-[-0.03em] text-[#202020] sm:text-3xl">
               {formatGaitType(visual_analysis.gait_type)}

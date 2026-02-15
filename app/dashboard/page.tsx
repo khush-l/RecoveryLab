@@ -1,15 +1,17 @@
 "use client";
 
 import React, { useEffect, useState } from "react";
+import { createPortal } from "react-dom";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
 import Header from "@/components/header";
 import Footer from "@/components/footer";
 import { useAuth } from "@/components/auth-context";
-import { getAnalysesForUser, type StoredAnalysis } from "@/lib/analyses-store";
+import { getAnalysesForUser, deleteAnalysis, type StoredAnalysis } from "@/lib/analyses-store";
 import { getEventsForPatients } from "@/lib/recoverai/store";
 import { signOut } from "@/lib/firebase-auth";
 import type { PatientEvent } from "@/types/recoverai";
+import { Button } from "@/components/ui/button";
 import {
   Activity,
   Calendar,
@@ -21,6 +23,9 @@ import {
   AlertTriangle,
   ClipboardCheck,
   BarChart3,
+  Trash2,
+  Loader2,
+  X,
 } from "lucide-react";
 
 /* ─── Helpers ─── */
@@ -60,57 +65,66 @@ function SeverityBadge({ score }: { score: number }) {
   );
 }
 
-function AnalysisCard({ analysis }: { analysis: StoredAnalysis }) {
+function AnalysisCard({ analysis, onDelete }: { analysis: StoredAnalysis; onDelete: (analysis: StoredAnalysis) => void }) {
   const observations =
     analysis.visual_analysis.visual_observations || [];
   const truncated = observations.slice(0, 2);
 
   return (
-    <Link
-      href={`/results/${analysis.id}`}
-      className="group flex flex-col rounded-2xl border border-[rgba(32,32,32,0.06)] bg-white p-5 shadow-[0px_2px_8px_-2px_rgba(1,65,99,0.08)] transition-all hover:border-[rgba(32,32,32,0.12)] hover:shadow-[0px_4px_16px_-4px_rgba(1,65,99,0.12)]"
-    >
-      <div className="mb-3 flex items-start justify-between">
-        <div className="flex items-center gap-2">
-          <div className="flex h-9 w-9 items-center justify-center rounded-lg bg-[#E0F5FF]">
-            <Activity className="h-4 w-4 text-[#1DB3FB]" />
-          </div>
-          <div>
-            <p className="text-sm font-bold capitalize text-[#202020]">
-              {analysis.visual_analysis.gait_type.replace(/_/g, " ")} Gait
-            </p>
-            <div className="flex items-center gap-1.5 text-xs text-[rgba(32,32,32,0.5)]">
-              <Calendar className="h-3 w-3" />
-              {formatDate(analysis.timestamp)}
+    <div className="group relative flex flex-col rounded-2xl border border-[rgba(32,32,32,0.06)] bg-white p-5 shadow-[0px_2px_8px_-2px_rgba(1,65,99,0.08)] transition-all hover:border-[rgba(32,32,32,0.12)] hover:shadow-[0px_4px_16px_-4px_rgba(1,65,99,0.12)]">
+      <Link href={`/results/${analysis.id}`} className="flex flex-1 flex-col">
+        <div className="mb-3 flex items-start justify-between">
+          <div className="flex items-center gap-2">
+            <div className="flex h-9 w-9 items-center justify-center rounded-lg bg-[#E0F5FF]">
+              <Activity className="h-4 w-4 text-[#1DB3FB]" />
+            </div>
+            <div>
+              <p className="text-sm font-bold capitalize text-[#202020]">
+                {analysis.visual_analysis.gait_type.replace(/_/g, " ")}
+              </p>
+              <div className="flex items-center gap-1.5 text-xs text-[rgba(32,32,32,0.5)]">
+                <Calendar className="h-3 w-3" />
+                {formatDate(analysis.timestamp)}
+              </div>
             </div>
           </div>
+          <SeverityBadge score={analysis.visual_analysis.severity_score} />
         </div>
-        <SeverityBadge score={analysis.visual_analysis.severity_score} />
-      </div>
 
-      {truncated.length > 0 && (
-        <ul className="mb-3 flex flex-col gap-1">
-          {truncated.map((obs, i) => (
-            <li
-              key={i}
-              className="line-clamp-1 text-xs leading-relaxed text-[rgba(32,32,32,0.65)]"
-            >
-              &bull; {obs}
-            </li>
-          ))}
-          {observations.length > 2 && (
-            <li className="text-xs text-[rgba(32,32,32,0.4)]">
-              +{observations.length - 2} more observations
-            </li>
-          )}
-        </ul>
-      )}
+        {truncated.length > 0 && (
+          <ul className="mb-3 flex flex-col gap-1">
+            {truncated.map((obs, i) => (
+              <li
+                key={i}
+                className="line-clamp-1 text-xs leading-relaxed text-[rgba(32,32,32,0.65)]"
+              >
+                &bull; {obs}
+              </li>
+            ))}
+            {observations.length > 2 && (
+              <li className="text-xs text-[rgba(32,32,32,0.4)]">
+                +{observations.length - 2} more observations
+              </li>
+            )}
+          </ul>
+        )}
 
-      <div className="mt-auto flex items-center gap-1 text-xs font-semibold text-[#1DB3FB] transition-all group-hover:gap-2">
-        View full results
-        <ArrowRight className="h-3 w-3" />
-      </div>
-    </Link>
+        <div className="mt-auto flex items-center justify-between">
+          <div className="flex items-center gap-1 text-xs font-semibold text-[#1DB3FB] transition-all group-hover:gap-2">
+            View full results
+            <ArrowRight className="h-3 w-3" />
+          </div>
+        </div>
+      </Link>
+      {/* Delete button */}
+      <button
+        onClick={(e) => { e.preventDefault(); e.stopPropagation(); onDelete(analysis); }}
+        className="absolute bottom-4 right-4 rounded-full p-1.5 text-[rgba(32,32,32,0.2)] opacity-0 transition-all hover:bg-red-50 hover:text-red-500 group-hover:opacity-100"
+        title="Delete analysis"
+      >
+        <Trash2 className="h-3.5 w-3.5" />
+      </button>
+    </div>
   );
 }
 
@@ -172,8 +186,8 @@ function eventTitle(event: PatientEvent): string {
 function eventDescription(event: PatientEvent): string {
   const p = event.payload || {};
   if (event.type === "consultation") {
-    const gait = p.gait_type?.replace(/_/g, " ") || "gait";
-    return `Discussed ${gait} analysis with AI recovery specialist`;
+    const movementType = p.gait_type?.replace(/_/g, " ") || "movement";
+    return `Discussed ${movementType} analysis with AI recovery specialist`;
   }
   if (event.type === "checkin") {
     if (p.action === "sms_reminders_enabled") {
@@ -233,12 +247,18 @@ function EmptyStateIllustration() {
 /* ─── Main Page ─── */
 
 export default function DashboardPage() {
-  const { user, loading } = useAuth();
+  const { user, loading, hasCalendarAccess } = useAuth();
   const router = useRouter();
   const [analyses, setAnalyses] = useState<StoredAnalysis[]>([]);
   const [events, setEvents] = useState<PatientEvent[]>([]);
   const [fetching, setFetching] = useState(true);
   const [fetchError, setFetchError] = useState<string | null>(null);
+  const [mounted, setMounted] = useState(false);
+  const [deleteTarget, setDeleteTarget] = useState<StoredAnalysis | null>(null);
+  const [deleteCalendarToo, setDeleteCalendarToo] = useState(true);
+  const [isDeleting, setIsDeleting] = useState(false);
+
+  useEffect(() => setMounted(true), []);
 
   useEffect(() => {
     if (!loading && !user) {
@@ -287,6 +307,31 @@ export default function DashboardPage() {
     router.push("/signin");
   };
 
+  const handleDeleteAnalysis = async () => {
+    if (!deleteTarget || !user) return;
+    setIsDeleting(true);
+
+    try {
+      // Delete calendar events for this session if requested
+      if (deleteCalendarToo && hasCalendarAccess) {
+        await fetch("/api/calendar/delete-exercises", {
+          method: "DELETE",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ user_id: user.uid, session_id: deleteTarget.session_id }),
+        });
+      }
+
+      // Delete the analysis from Firestore
+      await deleteAnalysis(deleteTarget.id);
+      setAnalyses((prev) => prev.filter((a) => a.id !== deleteTarget.id));
+      setDeleteTarget(null);
+    } catch (err) {
+      console.error("Failed to delete analysis:", err);
+    } finally {
+      setIsDeleting(false);
+    }
+  };
+
   if (loading || !user) {
     return (
       <div className="flex min-h-screen items-center justify-center">
@@ -300,7 +345,7 @@ export default function DashboardPage() {
       <Header solid />
 
       <main className="flex-1 px-5 pb-20 pt-28 sm:px-8 sm:pt-32">
-        <div className="mx-auto max-w-[1100px]">
+        <div className="mx-auto max-w-[1400px]">
           {/* Dashboard header */}
           <div className="mb-8 flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
             <div>
@@ -350,15 +395,15 @@ export default function DashboardPage() {
                 No analyses yet
               </h3>
               <p className="mb-6 max-w-sm text-sm text-[rgba(32,32,32,0.6)]">
-                Upload a video of yourself walking to get your first AI-powered
-                gait analysis and personalized exercise plan.
+                Upload a video to get your first AI-powered movement
+                analysis and personalized exercise plan.
               </p>
               <Link
                 href="/analyze"
                 className="inline-flex h-10 items-center gap-2 rounded-full border border-[#202020] bg-gradient-to-b from-[#515151] to-[#202020] px-6 text-sm font-semibold text-white shadow-[0_0_1px_3px_#494949_inset,0_6px_5px_0_rgba(0,0,0,0.55)_inset] transition-opacity hover:opacity-90"
               >
                 <Plus className="h-4 w-4" />
-                Analyze Your Gait
+                Start Analysis
               </Link>
             </div>
           ) : (
@@ -367,11 +412,11 @@ export default function DashboardPage() {
               {analyses.length > 0 && (
                 <section>
                   <h2 className="mb-4 text-lg font-bold text-[#202020]">
-                    Gait Analyses
+                    Your Analyses
                   </h2>
                   <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
                     {analyses.map((analysis) => (
-                      <AnalysisCard key={analysis.id} analysis={analysis} />
+                      <AnalysisCard key={analysis.id} analysis={analysis} onDelete={(a) => { setDeleteTarget(a); setDeleteCalendarToo(true); }} />
                     ))}
                   </div>
                 </section>
@@ -415,6 +460,89 @@ export default function DashboardPage() {
       </main>
 
       <Footer />
+
+      {/* Delete analysis confirmation modal */}
+      {mounted && deleteTarget && createPortal(
+        <div className="fixed inset-0 z-[9999] flex items-center justify-center">
+          <div className="absolute inset-0 bg-black/40 backdrop-blur-sm" onClick={() => !isDeleting && setDeleteTarget(null)} />
+          <div className="relative z-10 mx-4 w-full max-w-md rounded-2xl border border-[rgba(32,32,32,0.08)] bg-white p-6 shadow-xl">
+            <button
+              onClick={() => setDeleteTarget(null)}
+              disabled={isDeleting}
+              className="absolute right-4 top-4 rounded-full p-1 text-[rgba(32,32,32,0.4)] hover:bg-gray-100 hover:text-[#202020] disabled:opacity-50"
+            >
+              <X className="h-5 w-5" />
+            </button>
+
+            <div className="mb-4 flex items-center gap-3">
+              <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-red-50">
+                <AlertTriangle className="h-5 w-5 text-red-500" />
+              </div>
+              <h3 className="text-lg font-bold text-[#202020]">Delete Analysis</h3>
+            </div>
+
+            <p className="mb-4 text-sm leading-[170%] text-[rgba(32,32,32,0.65)]">
+              Are you sure you want to delete this{" "}
+              <span className="font-semibold text-[#202020]">
+                {deleteTarget.visual_analysis.gait_type.replace(/_/g, " ")}
+              </span>{" "}
+              analysis from {formatDate(deleteTarget.timestamp)}? This cannot be undone.
+            </p>
+
+            {/* Calendar checkbox */}
+            {hasCalendarAccess && (
+              <label className="mb-6 flex cursor-pointer items-start gap-3 rounded-lg border border-[rgba(32,32,32,0.08)] bg-[rgba(32,32,32,0.02)] p-3">
+                <input
+                  type="checkbox"
+                  checked={deleteCalendarToo}
+                  onChange={(e) => setDeleteCalendarToo(e.target.checked)}
+                  className="mt-0.5 h-4 w-4 rounded border-gray-300 text-red-500 focus:ring-red-400"
+                />
+                <div>
+                  <p className="text-sm font-medium text-[#202020]">
+                    Also remove calendar exercises
+                  </p>
+                  <p className="text-xs text-[rgba(32,32,32,0.5)]">
+                    Delete any scheduled exercises linked to this analysis from Google Calendar.
+                  </p>
+                </div>
+              </label>
+            )}
+
+            <div className="flex gap-3">
+              <Button
+                variant="modern-outline"
+                size="modern-lg"
+                onClick={() => setDeleteTarget(null)}
+                disabled={isDeleting}
+                className="flex-1"
+              >
+                Cancel
+              </Button>
+              <Button
+                variant="modern-primary"
+                size="modern-lg"
+                onClick={handleDeleteAnalysis}
+                disabled={isDeleting}
+                className="flex-1 gap-2 border-red-700 bg-red-600 shadow-none hover:bg-red-700 [background-image:none]"
+              >
+                {isDeleting ? (
+                  <>
+                    <Loader2 className="h-4 w-4 animate-spin" />
+                    Deleting...
+                  </>
+                ) : (
+                  <>
+                    <Trash2 className="h-4 w-4" />
+                    Delete
+                  </>
+                )}
+              </Button>
+            </div>
+          </div>
+        </div>,
+        document.body
+      )}
     </div>
   );
 }

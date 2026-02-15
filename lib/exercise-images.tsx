@@ -226,7 +226,7 @@ const CATEGORY_LABELS: Record<ExerciseCategory, string> = {
   stretching: "Stretch",
   strength: "Strength",
   balance: "Balance",
-  walking: "Gait",
+  walking: "Walking",
   core: "Core",
   hip: "Hip",
   ankle: "Ankle",

@@ -6,7 +6,7 @@ import type { GoogleCalendarToken } from "@/types/calendar";
 export async function DELETE(request: NextRequest): Promise<NextResponse> {
   try {
     const body = await request.json();
-    const { user_id } = body;
+    const { user_id, session_id } = body;
 
     if (!user_id) {
       return NextResponse.json(
@@ -52,11 +52,16 @@ export async function DELETE(request: NextRequest): Promise<NextResponse> {
     });
 
     const allItems = response.data.items || [];
-    const gaitGuardEvents = allItems.filter(
-      (e) =>
-        e.description?.includes("GaitGuard") ||
-        e.summary?.includes("🏋️")
-    );
+    const gaitGuardEvents = allItems.filter((e) => {
+      const isGaitGuard =
+        e.description?.includes("GaitGuard") || e.summary?.includes("🏋️");
+      if (!isGaitGuard) return false;
+      // If session_id provided, only match events for that session
+      if (session_id) {
+        return e.description?.includes(`Session: ${session_id}`);
+      }
+      return true;
+    });
 
     let deleted = 0;
     for (const event of gaitGuardEvents) {
@@ -72,17 +77,31 @@ export async function DELETE(request: NextRequest): Promise<NextResponse> {
       }
     }
 
-    // Clear all calendar_sessions records so the "Add to Calendar" button resets
-    const sessionsSnap = await adminDb
-      .collection("users")
-      .doc(user_id)
-      .collection("calendar_sessions")
-      .get();
+    // Clear calendar_sessions records so the "Add to Calendar" button resets
+    if (session_id) {
+      // Only clear the specific session
+      const sessionDoc = adminDb
+        .collection("users")
+        .doc(user_id)
+        .collection("calendar_sessions")
+        .doc(session_id);
+      const sessionSnap = await sessionDoc.get();
+      if (sessionSnap.exists) {
+        await sessionDoc.delete();
+      }
+    } else {
+      // Clear all sessions
+      const sessionsSnap = await adminDb
+        .collection("users")
+        .doc(user_id)
+        .collection("calendar_sessions")
+        .get();
 
-    const batch = adminDb.batch();
-    sessionsSnap.docs.forEach((doc) => batch.delete(doc.ref));
-    if (sessionsSnap.docs.length > 0) {
-      await batch.commit();
+      const batch = adminDb.batch();
+      sessionsSnap.docs.forEach((doc) => batch.delete(doc.ref));
+      if (sessionsSnap.docs.length > 0) {
+        await batch.commit();
+      }
     }
 
     return NextResponse.json({

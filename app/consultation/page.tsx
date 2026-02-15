@@ -253,7 +253,7 @@ function ConsultationContent() {
               <ul className="mt-3 space-y-2 text-sm text-gray-600">
                 <li className="flex items-start gap-2">
                   <span className="mt-0.5 h-1.5 w-1.5 shrink-0 rounded-full bg-[#1DB3FB]" />
-                  Your therapist will introduce themselves and discuss your gait analysis results
+                  Your therapist will introduce themselves and discuss your analysis results
                 </li>
                 <li className="flex items-start gap-2">
                   <span className="mt-0.5 h-1.5 w-1.5 shrink-0 rounded-full bg-[#1DB3FB]" />

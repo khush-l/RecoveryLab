@@ -6,6 +6,7 @@ import {
   getDocs,
   doc,
   getDoc,
+  deleteDoc,
 } from "firebase/firestore";
 import { db } from "@/lib/firebase";
 import type { GaitAnalysisResponse, StoredKeyFrame } from "@/types/gait-analysis";
@@ -69,4 +70,9 @@ export async function getAnalysisById(
   const snap = await getDoc(docRef);
   if (!snap.exists()) return null;
   return { id: snap.id, ...snap.data() } as StoredAnalysis;
+}
+
+/** Delete an analysis from Firestore */
+export async function deleteAnalysis(id: string): Promise<void> {
+  await deleteDoc(doc(db, COLLECTION, id));
 }

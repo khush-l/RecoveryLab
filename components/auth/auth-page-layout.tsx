@@ -12,15 +12,15 @@ interface AuthPageLayoutProps {
 const features = [
   {
     title: "AI-Powered Analysis",
-    description: "Upload a walking video and get instant gait analysis powered by advanced computer vision.",
+    description: "Upload a video and get instant movement analysis powered by advanced computer vision.",
   },
   {
     title: "Personalized Coaching",
-    description: "Receive tailored exercises and rehabilitation plans based on your unique gait patterns.",
+    description: "Receive tailored exercises and rehabilitation plans based on your unique movement patterns.",
   },
   {
     title: "Track Your Progress",
-    description: "Monitor your gait improvements over time with a dashboard of past analyses.",
+    description: "Monitor your progress over time with a dashboard of past analyses.",
   },
 ];
 
@@ -49,12 +49,12 @@ export default function AuthPageLayout({ children }: AuthPageLayoutProps) {
             {/* Left: marketing content */}
             <div className="hidden flex-col justify-center lg:flex">
               <h1 className="mb-4 text-4xl font-bold leading-tight tracking-tight text-[#202020]">
-                Smart gait analysis,{" "}
+                Smart movement analysis,{" "}
                 <span className="text-gradient">better movement</span>
               </h1>
               <p className="mb-8 text-lg leading-relaxed text-[rgba(32,32,32,0.7)]">
-                GaitGuard uses AI to analyze your walking patterns and provides
-                personalized exercises to help you move better.
+                GaitGuard uses AI to analyze your movement and provides
+                personalized exercises to help you recover faster.
               </p>
 
               <div className="flex flex-col gap-4">

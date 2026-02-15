@@ -17,7 +17,7 @@ const geistMono = Geist_Mono({
 
 export const metadata: Metadata = {
   title: "GaitGuard",
-  description: "GaitGuard - Gait Analysis Platform",
+  description: "GaitGuard - AI-Powered Movement Analysis & Physical Therapy Platform",
 };
 
 export default function RootLayout({

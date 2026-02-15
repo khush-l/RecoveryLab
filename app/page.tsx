@@ -18,7 +18,7 @@ export default function Home() {
               <div className="fade-in">
                 <div className="mb-6 inline-flex items-center gap-2 rounded-full bg-white px-4 py-1.5 text-sm text-[rgba(32,32,32,0.75)] shadow-[0px_2px_4px_-1px_rgba(1,65,99,0.08)] border border-[rgba(32,32,32,0.08)]">
                   <span className="inline-block h-2 w-2 rounded-full bg-gradient-to-r from-[#1DB3FB] to-[#00A7EF]" />
-                  Gait Analysis Platform
+                  Movement Analysis Platform
                 </div>
               </div>
 
@@ -34,7 +34,7 @@ export default function Home() {
                 className="fade-in mt-6 max-w-xl text-base leading-[140%] text-[rgba(32,32,32,0.75)] sm:text-lg"
                 style={{ animationDelay: "0.2s" }}
               >
-                Upload a walking video and get AI-powered gait analysis with
+                Upload a video and get AI-powered movement analysis with
                 personalized exercise recommendations in seconds.
               </p>
 
@@ -44,7 +44,7 @@ export default function Home() {
               >
                 <Link href="/analyze">
                   <Button variant="modern-primary" size="modern-xl" className="gap-2 px-6">
-                    Analyze Your Gait
+                    Start Analysis
                     <ArrowRight className="h-4 w-4" />
                   </Button>
                 </Link>
@@ -147,8 +147,8 @@ export default function Home() {
                 Built for <span className="text-gradient">precision</span>
               </h2>
               <p className="mx-auto mt-4 max-w-lg text-base leading-[140%] text-[rgba(32,32,32,0.75)]">
-                Everything you need to analyze, monitor, and improve gait
-                patterns.
+                Everything you need to analyze, monitor, and improve your
+                movement.
               </p>
             </div>
 
@@ -183,7 +183,7 @@ export default function Home() {
                   </h3>
                 </div>
                 <p className="text-base leading-[140%] text-[rgba(32,32,32,0.75)]">
-                  NVIDIA VLM analyzes your walking video frame by frame to identify gait patterns and abnormalities.
+                  NVIDIA VLM analyzes your video frame by frame to identify movement patterns and abnormalities.
                 </p>
               </div>
 
@@ -277,12 +277,12 @@ export default function Home() {
                 {
                   step: "02",
                   title: "AI Analysis",
-                  description: "NVIDIA's vision AI analyzes your gait patterns, detecting asymmetries, postural issues, and movement abnormalities.",
+                  description: "NVIDIA's vision AI analyzes your movement patterns, detecting asymmetries, postural issues, and abnormalities.",
                 },
                 {
                   step: "03",
                   title: "Get Your Plan",
-                  description: "Receive a personalized exercise program with step-by-step instructions tailored to your specific gait patterns.",
+                  description: "Receive a personalized exercise program with step-by-step instructions tailored to your specific needs.",
                 },
               ].map((item) => (
                 <div key={item.step} className="platform-feature-card rounded-[10px] border border-[rgba(32,32,32,0.06)] p-6 text-center">
@@ -309,8 +309,8 @@ export default function Home() {
                 Ready to improve your <span className="text-gradient">movement</span>?
               </h2>
               <p className="mx-auto mt-4 max-w-md text-base leading-[140%] text-[rgba(32,32,32,0.75)]">
-                Join GaitGuard today and take the first step towards better gait
-                health.
+                Join GaitGuard today and take the first step towards better
+                movement health.
               </p>
               <div className="mt-8 flex justify-center">
                 <Link href="/analyze">

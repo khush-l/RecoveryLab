@@ -13,6 +13,7 @@ import {
   saveCalendarToken,
   getCalendarToken,
   isTokenExpired,
+  deleteCalendarToken,
 } from "@/lib/calendar-store";
 import type { CalendarEvent } from "@/types/calendar";
 import {
@@ -33,6 +34,7 @@ import {
   X,
   AlertTriangle,
   RefreshCw,
+  Unlink,
 } from "lucide-react";
 
 const ACCENT_COLORS = [
@@ -203,6 +205,18 @@ export default function CalendarPage() {
     }
   };
 
+  const handleDisconnect = async () => {
+    if (!user) return;
+    try {
+      await deleteCalendarToken(user.uid);
+      setCalendarAccess(false);
+      setEvents([]);
+      setSelectedDate(null);
+    } catch (err) {
+      setError(err instanceof Error ? err.message : "Failed to disconnect calendar");
+    }
+  };
+
   const prevMonth = () => {
     if (month === 0) {
       setMonth(11);
@@ -302,6 +316,13 @@ export default function CalendarPage() {
                     Clear All
                   </button>
                 )}
+                <button
+                  onClick={handleDisconnect}
+                  className="inline-flex items-center gap-1.5 rounded-full border border-[rgba(32,32,32,0.08)] bg-white px-3.5 py-1.5 text-sm font-semibold text-[rgba(32,32,32,0.6)] shadow-sm transition-colors hover:border-red-200 hover:text-red-500"
+                >
+                  <Unlink className="h-3.5 w-3.5" />
+                  Disconnect
+                </button>
               </div>
             )}
           </div>
@@ -429,7 +450,7 @@ export default function CalendarPage() {
                     No exercise events this month.
                   </p>
                   <p className="mt-1 text-xs text-[rgba(32,32,32,0.3)]">
-                    Run a gait analysis and click &ldquo;Add to Calendar&rdquo; to schedule exercises.
+                    Run an analysis and click &ldquo;Add to Calendar&rdquo; to schedule exercises.
                   </p>
                 </div>
               )}
