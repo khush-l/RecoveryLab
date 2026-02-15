@@ -98,10 +98,14 @@ export default function NotificationsPage() {
   const handleSaveContact = async (contactData: {
     name: string;
     relationship: string;
+    role: import("@/types/notifications").ContactRole;
     phone: string;
     email: string;
+    organization?: string;
+    license_number?: string;
     notifications: FamilyContact["notifications"];
     channels: FamilyContact["channels"];
+    preferences: FamilyContact["preferences"];
   }) => {
     if (!user) return;
 
@@ -206,11 +210,10 @@ export default function NotificationsPage() {
           <div className="mb-8 flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
             <div>
               <h1 className="text-2xl font-bold text-[#202020]">
-                Family Notifications
+                Care Team Notifications
               </h1>
               <p className="mt-1 text-sm text-[rgba(32,32,32,0.6)]">
-                Keep your family and caregivers informed about your recovery
-                progress.
+                Keep your care team, family, and healthcare providers informed about your recovery progress.
               </p>
             </div>
             <button
@@ -238,12 +241,12 @@ export default function NotificationsPage() {
             </div>
           ) : (
             <div className="space-y-10">
-              {/* Family Contacts Section */}
+              {/* Care Team Section */}
               <section>
                 <div className="mb-4 flex items-center gap-2">
                   <Users className="h-5 w-5 text-[#1DB3FB]" />
                   <h2 className="text-lg font-bold text-[#202020]">
-                    Family Contacts
+                    Care Team Contacts
                   </h2>
                 </div>
 
@@ -272,8 +275,7 @@ export default function NotificationsPage() {
                       No contacts yet
                     </p>
                     <p className="mt-1 text-xs text-[rgba(32,32,32,0.5)]">
-                      Add family members or caregivers to receive notifications
-                      about your recovery progress.
+                      Add doctors, family members, therapists, or other care team members to receive notifications about your recovery progress.
                     </p>
                   </div>
                 )}

@@ -9,6 +9,7 @@ import VideoUpload from "@/components/analyze/video-upload";
 import AnalysisLoading from "@/components/analyze/analysis-loading";
 import AnalysisResults from "@/components/analyze/analysis-results";
 import DebugPanel from "@/components/analyze/debug-panel";
+import StreaksDisplay from "@/components/streaks-display";
 import { Button } from "@/components/ui/button";
 import { RotateCcw, AlertCircle } from "lucide-react";
 import { extractVideoFrames } from "@/lib/extract-frames";
@@ -140,6 +141,15 @@ function AnalyzePageInner() {
         }).catch((err) =>
           console.error("[RecoveryLab] Failed to send family notifications:", err)
         );
+
+        // Update streak
+        fetch("/api/streaks", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ user_id: user.uid }),
+        }).catch((err) =>
+          console.error("[RecoveryLab] Failed to update streak:", err)
+        );
       }
     } catch (err) {
       const message =
@@ -197,13 +207,20 @@ function AnalyzePageInner() {
           )}
 
           {pageState === "upload" && (
-            <VideoUpload
-              onVideoReady={handleVideoReady}
-              isAnalyzing={false}
-              selectedActivity={activityType}
-              onActivityChange={(a) => { setActivityType(a); setTargetExercise(null); }}
-              exerciseName={targetExercise?.name}
-            />
+            <>
+              {user && (
+                <div className="fade-in mb-8">
+                  <StreaksDisplay />
+                </div>
+              )}
+              <VideoUpload
+                onVideoReady={handleVideoReady}
+                isAnalyzing={false}
+                selectedActivity={activityType}
+                onActivityChange={(a) => { setActivityType(a); setTargetExercise(null); }}
+                exerciseName={targetExercise?.name}
+              />
+            </>
           )}
 
           {pageState === "analyzing" && (
