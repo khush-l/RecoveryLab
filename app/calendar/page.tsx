@@ -352,7 +352,7 @@ export default function CalendarPage() {
           <div className="mb-8 flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
             <div>
               <h1 className="h2-style text-[#202020]">
-                Exercise <span className="text-gradient">Calendar</span>
+                Physical Therapy <span className="text-gradient">Calendar</span>
               </h1>
               <p className="mt-2 text-sm text-[rgba(32,32,32,0.55)]">
                 View and manage your scheduled exercise events.

@@ -12,7 +12,7 @@ export interface ActivityTypeConfig {
 export const ACTIVITY_TYPES: ActivityTypeConfig[] = [
   {
     id: "gait",
-    label: "Walking Analysis",
+    label: "Walking",
     description: "Analyze walking patterns and identify movement abnormalities",
     icon: "Footprints",
     videoTip: "Record yourself walking for 10-15 seconds for best results (max 30s)",
