@@ -3,7 +3,7 @@
 RecoveryLab is an AI-powered physical therapy and movement analysis platform that turns any camera into a structured rehabilitation assessment tool. It evaluates movement patterns, generates personalized rehab plans, and improves adherence through real-time AI consultations and accountability systems.
 
 Devpost: https://devpost.com/software/recoverylab  
-Live Demo: [https://recoverylab.vercel.app](https://recovery-lab-eight.vercel.app/)  
+Live Demo: [https://recovery-lab-eight.vercel.app](https://recovery-lab-eight.vercel.app/)  
 
 ## Overview
 
